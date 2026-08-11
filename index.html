@@ -3,1194 +3,2066 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VaultCrypt Web</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<title>Random Studio — Random Data &amp; Dev Toolkit</title>
+<meta name="description" content="A fast, modern, all-in-one random data & developer QoL toolkit — numbers, strings, passwords, fake profiles, bulk rename, XP curves, and more.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <style>
-:root {
-  --bg: #14161c;
-  --card: #1c1f28;
-  --border: #2a2e3a;
-  --border-light: #343a4d;
-  --input-bg: #10121a;
-  --text: #e6e8ee;
-  --text-dim: #9aa0b4;
-  --text-dimmer: #6d7186;
-  --accent: #5865f2;
-  --accent-hover: #6b76f5;
-  --danger: #f47174;
-  --danger-bg: #341a1f;
-  --danger-border: #4a2530;
-  --good: #3ecf8e;
-  --warn: #f5a623;
+:root{
+  --bg:#0b0c12; --bg-elev:#12141e; --surface:#171923; --surface-2:#1e2130;
+  --border:#2a2d3d; --text:#eef0fa; --text-dim:#8d92ab;
+  --accent:#7c6cf6; --accent-2:#9d8bff; --accent-soft:rgba(124,108,246,.16);
+  --warm:#f6b76b; --warm-soft:rgba(246,183,107,.18);
+  --success:#3ddc97; --warning:#f5b942; --danger:#f2596b;
+  --radius:14px; --radius-sm:9px;
+  --font-display:'Sora',system-ui,sans-serif;
+  --font-body:'Inter',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono','Cascadia Code',monospace;
+  --sidebar-w:250px;
+  color-scheme: dark;
 }
-* { box-sizing: border-box; }
-html, body {
-  margin: 0; padding: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: -apple-system, "Segoe UI", "Inter", sans-serif;
-  font-size: 14px;
+:root.light{
+  --bg:#f4f5fb; --bg-elev:#ffffff; --surface:#ffffff; --surface-2:#eef0f8;
+  --border:#dde1ee; --text:#161822; --text-dim:#666b82;
+  --accent:#6a55f0; --accent-2:#5843d6; --accent-soft:rgba(106,85,240,.10);
+  --warm:#c97a2e; --warm-soft:rgba(201,122,46,.12);
+  --success:#1fa971; --warning:#c9861a; --danger:#d63c52;
+  color-scheme: light;
 }
-.wrap { max-width: 960px; margin: 0 auto; padding: 28px 20px 60px; }
-header { margin-bottom: 18px; }
-header h1 { font-size: 22px; font-weight: 800; margin: 0 0 2px; display: flex; align-items: center; gap: 8px; }
-header p { margin: 0; color: var(--text-dim); font-size: 12.5px; }
-header .badge {
-  display: inline-block; margin-top: 8px; font-size: 11px; color: var(--text-dimmer);
-  border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px;
+*,*::before,*::after{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:var(--font-body); -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+}
+button,input,select,textarea{font-family:inherit; color:inherit;}
+::selection{ background:var(--accent); color:#fff; }
+a{ color:var(--accent-2); }
+
+/* scrollbars */
+*{scrollbar-width:thin; scrollbar-color:var(--border) transparent;}
+*::-webkit-scrollbar{width:9px; height:9px;}
+*::-webkit-scrollbar-thumb{background:var(--border); border-radius:6px;}
+*::-webkit-scrollbar-thumb:hover{background:var(--accent);}
+*::-webkit-scrollbar-track{background:transparent;}
+
+/* focus visibility */
+:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; border-radius:6px; }
+
+/* ---------- App shell ---------- */
+#app{ display:flex; height:100vh; width:100vw; }
+
+.sidebar{
+  width:var(--sidebar-w); flex:0 0 auto; background:var(--bg-elev);
+  border-right:1px solid var(--border); display:flex; flex-direction:column;
+  padding:18px 14px; gap:4px; overflow-y:auto;
+}
+.brand{ display:flex; align-items:center; gap:10px; padding:6px 8px 4px; }
+.brand-mark{
+  width:30px; height:30px; border-radius:9px; flex:none;
+  background:linear-gradient(135deg,var(--accent),var(--warm));
+  display:flex; align-items:center; justify-content:center; font-size:15px;
+}
+.brand-text{ display:flex; flex-direction:column; line-height:1.15; }
+.brand-title{ font-family:var(--font-display); font-weight:800; font-size:15px; letter-spacing:.2px; }
+.brand-sub{ font-size:10.5px; color:var(--text-dim); }
+
+.palette-hint{
+  margin:12px 8px 10px; padding:8px 10px; border:1px solid var(--border);
+  border-radius:var(--radius-sm); font-size:11.5px; color:var(--text-dim);
+  display:flex; align-items:center; justify-content:space-between; cursor:pointer;
+  background:var(--surface); transition:border-color .15s;
+}
+.palette-hint:hover{ border-color:var(--accent); color:var(--text); }
+.kbd{
+  font-family:var(--font-mono); font-size:10.5px; padding:1px 6px;
+  border:1px solid var(--border); border-radius:5px; background:var(--surface-2);
 }
 
-.mode-toggle {
-  display: flex; gap: 0; background: var(--card); border: 1px solid var(--border);
-  border-radius: 12px; padding: 6px; margin-bottom: 16px;
+.nav{ display:flex; flex-direction:column; gap:2px; margin-top:6px; overflow-y:auto; flex:1; }
+.nav-group-label{
+  font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-dim);
+  padding:12px 10px 4px; font-weight:600;
 }
-.mode-toggle button {
-  flex: 1; padding: 10px 16px; border: none; border-radius: 8px; background: transparent;
-  color: var(--text-dim); font-weight: 600; font-size: 14px; cursor: pointer; transition: background .15s;
+.nav-item{
+  display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:10px;
+  cursor:pointer; color:var(--text-dim); font-size:13px; user-select:none;
+  border:1px solid transparent; transition:background .12s, color .12s;
 }
-.mode-toggle button.active { background: var(--accent); color: white; }
+.nav-item .icon{ font-size:15px; width:18px; text-align:center; flex:none; }
+.nav-item:hover{ background:var(--surface-2); color:var(--text); }
+.nav-item.active{ background:var(--accent-soft); color:var(--accent); font-weight:600; border-color:var(--accent); }
 
-.grid { display: grid; grid-template-columns: 3fr 2fr; gap: 16px; }
-@media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+.sidebar-foot{ display:flex; flex-direction:column; gap:6px; margin-top:8px; }
 
-.card {
-  background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px;
-}
-.section-label {
-  font-size: 11px; font-weight: 700; letter-spacing: .06em; color: var(--text-dim);
-  text-transform: uppercase; margin: 0 0 8px;
-}
-.row-between { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-.dim { color: var(--text-dimmer); font-size: 12px; }
+/* ---------- Main area ---------- */
+.main{ flex:1; display:flex; flex-direction:column; min-width:0; }
 
-#dropzone {
-  border: 1.5px dashed #33384a; border-radius: 10px; min-height: 170px; padding: 10px;
-  display: flex; flex-direction: column; gap: 4px; overflow-y: auto; max-height: 320px;
-  transition: border-color .15s, background .15s;
+.topbar{
+  display:flex; align-items:center; gap:10px; padding:10px 22px;
+  border-bottom:1px solid var(--border); background:var(--bg-elev); flex:none;
 }
-#dropzone.dragover { border-color: var(--accent); background: rgba(88,101,242,0.08); }
-#dropzone .empty-hint {
-  flex: 1; display: flex; align-items: center; justify-content: center; text-align: center;
-  color: var(--text-dimmer); font-size: 12.5px; padding: 20px;
-}
-.queue-item {
-  display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; cursor: pointer;
-  font-size: 13px;
-}
-.queue-item:hover { background: #212636; }
-.queue-item.selected { background: #2a3550; }
-.queue-item .qname { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.queue-item .qsize { color: var(--text-dimmer); font-size: 11.5px; flex-shrink: 0; }
+.topbar .spacer{ flex:1; }
+.seed-field{ display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-dim); }
+.hamburger{ display:none; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:7px 11px; font-size:15px; line-height:1; cursor:pointer; flex:none; }
 
-.btn-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-button.btn {
-  background: #262b3a; border: 1px solid var(--border-light); border-radius: 8px; padding: 9px 14px;
-  color: var(--text); font-weight: 500; font-size: 13px; cursor: pointer; transition: background .15s;
+.content{ flex:1; overflow-y:auto; padding:26px 30px 40px; }
+.page{ display:none; max-width:1200px; margin:0 auto; }
+.page.active{ display:block; animation:fadein .18s ease; }
+@keyframes fadein{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;} }
+
+.page-head{ margin-bottom:18px; }
+.page-title{ font-family:var(--font-display); font-size:22px; font-weight:700; margin:0 0 4px; }
+.page-sub{ color:var(--text-dim); font-size:13px; max-width:640px; line-height:1.5; }
+
+.page-body{ display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap; }
+.page-body.stack{ flex-direction:column; }
+
+/* ---------- Cards / controls ---------- */
+.card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); }
+.controls-card{ padding:18px; width:330px; flex:0 0 330px; display:flex; flex-direction:column; gap:11px; }
+.results-col{ flex:1 1 420px; min-width:320px; display:flex; flex-direction:column; gap:10px; }
+
+.field-row{ display:flex; align-items:center; gap:10px; }
+.field-row label{ min-width:96px; font-size:12.5px; color:var(--text-dim); flex:none; }
+.field-row.wide label{ min-width:0; }
+.field-row > *:last-child:not(label){ flex:1; }
+.field-row input, .field-row select{ min-width:0; }
+
+.field-check{ display:flex; align-items:center; gap:8px; font-size:12.5px; cursor:pointer; }
+.field-check input{ width:16px; height:16px; accent-color:var(--accent); cursor:pointer; }
+
+input[type=text],input[type=number],input[type=password],select,textarea{
+  background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-sm);
+  padding:7px 10px; font-size:13px; width:100%;
 }
-button.btn:hover { background: #2f3547; }
-button.btn:disabled { color: #55596b; background: #1a1c24; cursor: not-allowed; }
-button.btn.grow { flex: 1; }
-button.btn.primary { background: var(--accent); border: none; color: white; font-weight: 700; padding: 11px 16px; }
-button.btn.primary:hover { background: var(--accent-hover); }
-button.btn.primary:disabled { background: #333a55; color: #7a7f99; }
-button.btn.danger { background: transparent; border: 1px solid var(--danger-border); color: var(--danger); }
-button.btn.danger:hover { background: var(--danger-bg); }
+input[type=text]:focus,input[type=number]:focus,select:focus,textarea:focus{ border-color:var(--accent); outline:none; }
+textarea{ font-family:var(--font-mono); font-size:12.5px; resize:vertical; }
+input[type=range]{ accent-color:var(--accent); flex:1; }
 
-input[type=text], input[type=password] {
-  width: 100%; background: var(--input-bg); border: 1.5px solid var(--border); border-radius: 8px;
-  padding: 9px 10px; color: #f0f1f5; font-size: 13.5px; min-height: 20px;
-}
-input[type=text]:focus, input[type=password]:focus { outline: none; border-color: var(--accent); }
-.pw-field { display: flex; gap: 6px; align-items: center; }
-.pw-field input { flex: 1; }
-.pw-field button { flex-shrink: 0; background: transparent; border: none; color: var(--text-dim); font-size: 16px; cursor: pointer; padding: 4px 6px; }
-.pw-field button:hover { color: var(--text); }
-
-.strength-bar { height: 5px; border-radius: 3px; background: var(--input-bg); margin-top: 8px; overflow: hidden; }
-.strength-bar > div { height: 100%; width: 0%; transition: width .15s, background .15s; }
-.strength-label { font-size: 11px; color: var(--text-dimmer); margin-top: 3px; height: 14px; }
-
-.checkbox-row { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-size: 13px; color: #cdd0dd; }
-.checkbox-row input { accent-color: var(--accent); width: 15px; height: 15px; }
-
-.progress-card { margin-top: 16px; }
-.progress-outer {
-  background: var(--input-bg); border-radius: 6px; height: 10px; overflow: hidden; margin: 8px 0 6px;
-}
-.progress-outer > div { height: 100%; background: var(--accent); width: 0%; transition: width .1s; }
-.progress-outer.small { height: 5px; }
-#log {
-  background: #0f1117; border: 1px solid var(--border); border-radius: 8px; color: #a9c9a9;
-  font-family: Consolas, Menlo, monospace; font-size: 11.5px; height: 110px; overflow-y: auto;
-  padding: 8px 10px; margin-top: 8px; white-space: pre-wrap;
+select{ appearance:none; -webkit-appearance:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%238d92ab'/></svg>");
+  background-repeat:no-repeat; background-position:right 10px center; padding-right:26px;
 }
 
-.hint { font-size: 11px; color: var(--text-dimmer); margin-top: 6px; line-height: 1.4; }
+button{
+  font-size:12.5px; font-weight:500; padding:7px 13px; border-radius:var(--radius-sm);
+  border:1px solid var(--border); background:var(--surface-2); color:var(--text); cursor:pointer;
+  transition:background .12s, border-color .12s, transform .05s;
+}
+button:hover{ background:var(--border); }
+button:active{ transform:scale(.98); }
+button.primary{
+  background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:#fff; border:none;
+  font-weight:700; padding:9px 16px; font-size:13px; width:100%;
+}
+button.primary:hover{ filter:brightness(1.08); }
+button.ghost{ background:transparent; }
+button.danger{ background:transparent; color:var(--danger); border-color:var(--danger); }
+button.danger:hover{ background:var(--danger); color:#fff; }
+button:disabled{ opacity:.45; cursor:not-allowed; }
+.btn-row{ display:flex; gap:8px; flex-wrap:wrap; }
 
-/* Modal (preview) */
-.modal-backdrop {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none;
-  align-items: center; justify-content: center; z-index: 1000; padding: 20px;
-}
-.modal-backdrop.open { display: flex; }
-.modal {
-  background: var(--card); border: 1px solid var(--border); border-radius: 14px;
-  width: 100%; max-width: 720px; max-height: 85vh; display: flex; flex-direction: column;
-  padding: 18px; gap: 10px;
-}
-.modal-head { display: flex; align-items: center; gap: 8px; }
-.modal-head .title { font-weight: 700; font-size: 15px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.badge-ok { color: var(--good); font-weight: 700; font-size: 12.5px; }
-.badge-bad { color: var(--danger); font-weight: 700; font-size: 12.5px; }
-.modal-body { flex: 1; overflow: auto; min-height: 100px; }
-.modal-body img { max-width: 100%; display: block; margin: 0 auto; border-radius: 8px; }
-.modal-body pre {
-  background: #0f1117; border: 1px solid var(--border); border-radius: 8px; padding: 10px;
-  font-family: Consolas, Menlo, monospace; font-size: 11.5px; white-space: pre-wrap; word-break: break-all;
-  margin: 0;
-}
-.modal-foot { display: flex; justify-content: flex-end; gap: 8px; }
-.zip-entry-list { display: flex; flex-direction: column; gap: 2px; max-height: 200px; overflow-y: auto; margin-bottom: 8px; }
-.zip-entry-list div { padding: 6px 8px; border-radius: 6px; cursor: pointer; font-size: 12.5px; }
-.zip-entry-list div:hover { background: #212636; }
+.hint{ font-size:11.5px; color:var(--text-dim); line-height:1.5; }
+.stat{ color:var(--accent); font-weight:600; font-size:12px; }
 
-.toast-area { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 1100; }
-.toast {
-  background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px;
-  font-size: 13px; max-width: 320px; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-}
-.toast.error { border-color: var(--danger-border); }
+/* ---------- Results list ---------- */
+.results-head{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.results-head h3{ font-size:13px; margin:0; font-weight:600; }
+.results-head .spacer{ flex:1; }
 
-footer { margin-top: 24px; text-align: center; color: var(--text-dimmer); font-size: 11.5px; }
-footer a { color: var(--text-dim); }
+.results-list{
+  background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius);
+  padding:6px; max-height:520px; overflow-y:auto; font-family:var(--font-mono); font-size:12.5px;
+}
+.results-list .empty{ padding:30px 10px; text-align:center; color:var(--text-dim); font-family:var(--font-body); }
+.result-item{
+  padding:7px 9px; border-radius:7px; cursor:pointer; display:flex; justify-content:space-between; gap:8px;
+}
+.result-item:hover{ background:var(--surface); }
+.result-item .copied-badge{ color:var(--success); font-family:var(--font-body); font-size:11px; opacity:0; transition:opacity .15s; }
+.result-item.flash .copied-badge{ opacity:1; }
+
+.output-box{
+  background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius);
+  padding:12px 14px; font-family:var(--font-mono); font-size:12.5px; white-space:pre-wrap;
+  word-break:break-word; max-height:480px; overflow-y:auto; min-height:120px;
+}
+
+/* ---------- Toggle / theme switch ---------- */
+.theme-toggle{ display:flex; align-items:center; justify-content:space-between; }
+
+/* ---------- Toast ---------- */
+#toast{
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(16px);
+  background:var(--surface); border:1px solid var(--border); color:var(--text);
+  padding:10px 18px; border-radius:12px; font-size:12.5px; box-shadow:0 10px 30px rgba(0,0,0,.35);
+  opacity:0; pointer-events:none; transition:opacity .18s, transform .18s; z-index:500;
+}
+#toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* ---------- Command palette ---------- */
+#palette-overlay{
+  position:fixed; inset:0; background:rgba(5,6,10,.55); backdrop-filter:blur(2px);
+  display:none; align-items:flex-start; justify-content:center; padding-top:12vh; z-index:600;
+}
+#palette-overlay.show{ display:flex; }
+.palette{
+  width:min(560px,90vw); background:var(--bg-elev); border:1px solid var(--accent);
+  border-radius:16px; box-shadow:0 0 0 1px var(--accent-soft), 0 30px 80px rgba(0,0,0,.5);
+  overflow:hidden;
+}
+.palette input{
+  width:100%; border:none; border-bottom:1px solid var(--border); background:transparent;
+  padding:16px 18px; font-size:15px; color:var(--text);
+}
+.palette input:focus{ outline:none; }
+.palette-results{ max-height:50vh; overflow-y:auto; padding:6px; }
+.palette-item{
+  display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; cursor:pointer; font-size:13px;
+}
+.palette-item.sel{ background:var(--accent-soft); color:var(--accent); }
+.palette-item .icon{ width:18px; text-align:center; }
+.palette-empty{ padding:24px; text-align:center; color:var(--text-dim); font-size:12.5px; }
+
+/* ---------- Strength bar ---------- */
+.strength-bar{ height:7px; border-radius:4px; background:var(--surface-2); overflow:hidden; }
+.strength-bar > div{ height:100%; border-radius:4px; transition:width .15s, background .15s; }
+
+/* ---------- Color swatches ---------- */
+.swatch-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:12px; }
+.swatch{
+  height:76px; border-radius:12px; display:flex; align-items:flex-end; padding:9px; cursor:pointer;
+  font-size:10.5px; font-weight:700; font-family:var(--font-mono);
+}
+
+/* ---------- Groups (checkbox categories, e.g. Fake Profiles) ---------- */
+.field-group{ border:1px solid var(--border); border-radius:12px; padding:10px 12px; margin-bottom:8px; }
+.field-group-title{ font-size:11px; color:var(--text-dim); font-weight:600; text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px; }
+.checkbox-scroll{ max-height:300px; overflow-y:auto; padding-right:4px; }
+
+/* ---------- Table (Progression Scaler) ---------- */
+table.data-table{ width:100%; border-collapse:collapse; font-family:var(--font-mono); font-size:12.5px; }
+table.data-table th,table.data-table td{ padding:7px 10px; border-bottom:1px solid var(--border); text-align:left; }
+table.data-table th{ color:var(--text-dim); font-weight:600; position:sticky; top:0; background:var(--surface-2); }
+.table-wrap{ max-height:420px; overflow-y:auto; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface-2); }
+
+canvas.curve-canvas{ width:100%; height:150px; display:block; }
+
+/* ---------- History drawer ---------- */
+#history-drawer{
+  position:fixed; top:0; right:-360px; width:340px; height:100%; background:var(--bg-elev);
+  border-left:1px solid var(--border); z-index:400; transition:right .2s ease; display:flex; flex-direction:column;
+}
+#history-drawer.open{ right:0; }
+.history-head{ display:flex; align-items:center; justify-content:space-between; padding:16px 16px 10px; border-bottom:1px solid var(--border); }
+.history-list{ flex:1; overflow-y:auto; padding:8px; }
+.history-entry{ padding:9px 10px; border-radius:9px; font-size:12px; cursor:pointer; }
+.history-entry:hover{ background:var(--surface-2); }
+.history-entry time{ color:var(--text-dim); font-size:10.5px; display:block; margin-bottom:2px; }
+
+/* ---------- Bulk renamer / drop zone ---------- */
+.dropzone{
+  border:1.5px dashed var(--border); border-radius:var(--radius); padding:22px; text-align:center;
+  color:var(--text-dim); font-size:12.5px; cursor:pointer; transition:border-color .15s, color .15s;
+}
+.dropzone:hover, .dropzone.drag{ border-color:var(--accent); color:var(--text); }
+.conflict{ color:var(--danger) !important; }
+
+/* ---------- Warning / notice card ---------- */
+.notice{
+  border:1px solid var(--warning); background:var(--warm-soft); border-radius:var(--radius);
+  padding:14px 16px; font-size:12.5px; line-height:1.6; margin-bottom:14px;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width:900px){
+  .sidebar{ position:fixed; inset:0 auto 0 0; z-index:300; transform:translateX(-100%); transition:transform .2s; box-shadow:0 0 40px rgba(0,0,0,.4); }
+  .sidebar.open{ transform:translateX(0); }
+  .hamburger{ display:flex; }
+  .controls-card{ width:100%; flex:1 1 100%; }
+  .page-body{ flex-direction:column; }
+  .content{ padding:18px 16px 32px; }
+  .topbar{ padding:10px 12px; gap:8px; }
+  .seed-field{ flex:1; min-width:0; }
+  .seed-field span{ display:none; }
+  .seed-field input{ width:100% !important; min-width:0; }
+}
+@media (max-width:480px){
+  .topbar #aboutBtn{ display:none; }
+  .swatch-grid{ grid-template-columns:repeat(2,1fr); }
+}
+@media (prefers-reduced-motion:reduce){
+  *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
+}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>🔒 VaultCrypt Web</h1>
-    <p>Same AES-256-GCM + scrypt <code>.vault</code> format as the desktop app — files made in one work in the other.</p>
-    <span class="badge">Runs entirely in your browser · nothing is uploaded anywhere</span>
-  </header>
+<div id="app">
 
-  <div class="mode-toggle">
-    <button id="modeEncryptBtn" class="active">🔐 Encrypt</button>
-    <button id="modeDecryptBtn">🔓 Decrypt</button>
-  </div>
 
-  <div class="grid">
-    <div class="card">
-      <div class="row-between">
-        <div class="section-label" style="margin:0;">Files &amp; Folders</div>
-        <div class="dim" id="queueCount">0 items</div>
+  <nav class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">⟡</div>
+      <div class="brand-text">
+        <div class="brand-title">Random Studio</div>
+        <div class="brand-sub">Random data & dev toolkit</div>
       </div>
-      <div id="dropzone">
-        <div class="empty-hint" id="emptyHint">Drag &amp; drop files or a folder here<br>double-click a .vault file to preview it</div>
-      </div>
-      <div class="btn-row">
-        <button class="btn" id="addFilesBtn">＋ Add Files</button>
-        <button class="btn" id="addFolderBtn">＋ Add Folder</button>
-        <button class="btn" id="removeSelectedBtn">Remove Selected</button>
-        <button class="btn danger" id="clearAllBtn">Clear All</button>
-      </div>
-      <div class="btn-row">
-        <button class="btn grow" id="previewBtn">👁 Preview Selected</button>
-        <button class="btn grow" id="verifyBtn">✔ Verify Integrity</button>
-      </div>
-      <input type="file" id="fileInput" multiple style="display:none">
-      <input type="file" id="folderInput" webkitdirectory multiple style="display:none">
     </div>
 
-    <div class="card">
-      <div class="section-label">Password</div>
-      <div class="pw-field">
-        <input type="password" id="pwField" placeholder="Enter password" autocomplete="new-password">
-        <button id="pwToggle" title="Show/hide">👁</button>
-      </div>
-      <div class="strength-bar" id="strengthBarOuter"><div id="strengthBar"></div></div>
-      <div class="strength-label" id="strengthLabel"></div>
-
-      <div id="confirmRow" style="margin-top:10px;">
-        <div class="section-label">Confirm Password</div>
-        <div class="pw-field">
-          <input type="password" id="pwConfirm" placeholder="Re-enter password" autocomplete="new-password">
-          <button id="pwConfirmToggle" title="Show/hide">👁</button>
-        </div>
-      </div>
-
-      <div class="btn-row">
-        <button class="btn grow" id="genPasswordBtn">🎲 Generate Strong Password</button>
-      </div>
-
-      <div class="section-label" style="margin-top:14px;">Key File (optional)</div>
-      <div class="btn-row" style="margin-top:0;">
-        <button class="btn grow" id="genKeyfileBtn">🔑 Generate Key File…</button>
-        <button class="btn grow" id="importKeyfileBtn">📂 Import Key File…</button>
-      </div>
-      <div class="hint" id="keyfileHint">Use a key file instead of typing a password — great for backups.</div>
-      <input type="file" id="keyfileInput" accept=".key" style="display:none">
-
-      <div class="checkbox-row" style="margin-top:14px;">
-        <input type="checkbox" id="autoDownloadChk" checked>
-        <label for="autoDownloadChk">Download automatically when each item finishes</label>
-      </div>
-
-      <button class="btn primary" id="startBtn" style="width:100%; margin-top:14px;">Start Encryption</button>
+    <div class="palette-hint" id="paletteHint">
+      <span>Jump to a tool…</span>
+      <span class="kbd" id="paletteKbdHint">Ctrl K</span>
     </div>
-  </div>
 
-  <div class="card progress-card">
-    <div class="row-between">
-      <div id="phaseLabel" style="font-weight:600;">Ready</div>
-      <div class="dim" id="overallPct">0%</div>
-    </div>
-    <div class="progress-outer"><div id="overallProgress"></div></div>
-    <div class="progress-outer small"><div id="itemProgress"></div></div>
-    <div id="log"></div>
-  </div>
+    <div class="nav" id="navList"></div>
 
-  <footer>
-    Scrypt (N=65536, r=8, p=1) + AES-256-GCM, chunked with an authenticated integrity trailer — identical format to the VaultCrypt desktop app.
-  </footer>
-</div>
+    <div class="sidebar-foot">
+      <button class="ghost theme-toggle" id="themeToggle" style="width:100%;">
+        <span id="themeToggleLabel">☀ Light mode</span>
+      </button>
+      <button class="ghost" id="historyToggle" style="width:100%;">🕓 History</button>
+    </div>
+  </nav>
 
-<div class="modal-backdrop" id="previewBackdrop">
-  <div class="modal">
-    <div class="modal-head">
-      <div class="title" id="previewTitle">Preview</div>
-      <div id="previewBadge"></div>
+  <div class="main">
+    <div class="topbar">
+      <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">☰</button>
+      <div class="seed-field">
+        <span>Seed</span>
+        <input type="text" id="globalSeed" placeholder="blank = fully random" style="width:150px;">
+      </div>
+      <div class="spacer"></div>
+      <button class="ghost" id="aboutBtn">About</button>
     </div>
-    <div class="modal-body" id="previewBody"></div>
-    <div class="modal-foot">
-      <button class="btn" id="previewSaveBtn">💾 Save As…</button>
-      <button class="btn primary" id="previewCloseBtn">Close</button>
-    </div>
+    <div class="content" id="content"></div>
   </div>
 </div>
 
-<div class="toast-area" id="toastArea"></div>
+<div id="palette-overlay">
+  <div class="palette">
+    <input type="text" id="paletteInput" placeholder="Search tools…" autocomplete="off">
+    <div class="palette-results" id="paletteResults"></div>
+  </div>
+</div>
+
+<div id="history-drawer">
+  <div class="history-head">
+    <strong style="font-size:13px;">Generation History</strong>
+    <div style="display:flex; gap:6px;">
+      <button class="ghost" id="historyClear" style="padding:5px 9px;">Clear</button>
+      <button class="ghost" id="historyClose" style="padding:5px 9px;">✕</button>
+    </div>
+  </div>
+  <div class="history-list" id="historyList"></div>
+</div>
+
+<div id="toast"></div>
 
 <script>
-/* ==================== Embedded, tested crypto core (scrypt.js + vault.js) ==================== */
 'use strict';
-// Pure-JS scrypt (RFC 7914), built on Web Crypto's PBKDF2-HMAC-SHA256 for the
-// outer expand/contract steps. Salsa20/8 core + BlockMix + ROMix implemented
-// directly since Web Crypto has no scrypt primitive.
+/* ============================================================
+   DATA
+   ============================================================ */
+const FIRST_NAMES = ["Ava","Liam","Noah","Emma","Oliver","Sophia","Elijah","Isabella","Mateo","Mia","Lucas","Amelia","Ethan","Harper","James","Evelyn","Benjamin","Luna","Henry","Camila","Alexander","Gianna","Jackson","Aria","Sebastian","Scarlett","Aiden","Layla","Daniel","Nora","Leo","Zoey","Owen","Riley","Wyatt","Chloe","John","Priya","Kai","Freya","Ravi","Elena","Hiro","Nadia","Omar","Ines","Yusuf","Talia","Diego","Sana"];
+const LAST_NAMES = ["Smith","Johnson","Williams","Brown","Jones","Garcia","Miller","Davis","Rodriguez","Martinez","Hernandez","Lopez","Gonzalez","Wilson","Anderson","Thomas","Taylor","Moore","Jackson","Martin","Lee","Perez","Thompson","White","Harris","Sanchez","Clark","Ramirez","Lewis","Robinson","Walker","Young","Allen","King","Wright","Scott","Torres","Nguyen","Hill","Flores","Green","Adams","Nelson","Baker","Hall","Rivera","Campbell","Mitchell","Carter","Roberts"];
+const LOREM_WORDS = "lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua enim ad minim veniam quis nostrud exercitation ullamco laboris nisi aliquip ex ea commodo consequat duis aute irure in reprehenderit voluptate velit esse cillum eu fugiat nulla pariatur excepteur sint occaecat cupidatat non proident sunt culpa qui officia deserunt mollit anim id est laborum".split(" ");
+const DOMAINS = ["example.com","mail.com","sample.org","test.io","demo.dev"];
+const TLDS = ["com","net","org","io","dev","app","co"];
+const WORD_BANK = ["nebula","cascade","vector","quantum","harbor","ember","prism","falcon","granite","solstice","orchid","meridian","cobalt","voyage","lantern","thicket","zephyr","cinder","juniper","atlas"];
+const VEHICLE_MAKES = ["Toyota Camry","Honda Civic","Ford F-150","Chevrolet Silverado","Tesla Model 3","Nissan Altima","Jeep Wrangler","Subaru Outback","BMW 3 Series","Mercedes-Benz C-Class","Audi A4","Mazda CX-5","Hyundai Elantra","Kia Sportage","Volkswagen Jetta","Ram 1500"];
+const JOBS = ["Civil engineer","Software developer","Graphic designer","Marketing manager","Data analyst","Nurse practitioner","Financial advisor","Product manager","Mechanical engineer","Chef","Architect","Electrician","Photographer","Teacher","Pharmacist","UX researcher","Sales director","Accountant","Journalist","Veterinarian","Urban planner","Physical therapist","Systems administrator","Interior designer","Paralegal"];
+const COMPANY_SUFFIXES = ["Group","Solutions","Industries","Partners","Holdings","& Co","Technologies","Ventures","Collective","Studio"];
+const STREET_NAMES = ["Maple","Oak","Cedar","Willow","Sunset","Highland","Elm","Birch","Riverside","Meadow","Franklin","Lincoln","Washington","Park","Church","Main","Spruce","Chestnut","Cypress","Magnolia"];
+const STREET_TYPES = ["St","Ave","Rd","Ln","Dr","Ct","Blvd","Way","Pl"];
+const US_CITIES = [["Springfield","IL"],["Riverside","CA"],["Franklin","TN"],["Georgetown","TX"],["Salem","OR"],["Madison","WI"],["Arlington","VA"],["Bristol","CT"],["Manchester","NH"],["Fairview","CO"],["Clinton","IA"],["Greenville","SC"],["Ashland","OH"],["Kingston","NY"],["Chester","PA"]];
+const LOCALE_DATA = {
+  en_US: {label:"English (US)", first: FIRST_NAMES, last: LAST_NAMES, cities: US_CITIES, country:"USA",
+    phone: () => `(${ri(200,999)}) ${ri(200,999)}-${String(ri(0,9999)).padStart(4,"0")}`,
+    ssnFmt: () => `${String(ri(100,899)).padStart(3,"0")}-${String(ri(1,99)).padStart(2,"0")}-${String(ri(1,9999)).padStart(4,"0")}`},
+  en_GB: {label:"English (UK)", first:["Oliver","Amelia","George","Isla","Harry","Ava","Jack","Freya","Charlie","Grace","Jacob","Poppy","Thomas","Ivy","Oscar","Willow","Freddie","Florence","Archie","Rosie"],
+    last:["Smith","Jones","Taylor","Brown","Williams","Wilson","Johnson","Davies","Robinson","Wright","Thompson","Evans","Walker","White","Roberts","Green","Hall","Wood","Clarke","Baker"],
+    cities:[["Manchester",""],["Bristol",""],["Leeds",""],["Sheffield",""],["York",""],["Oxford",""],["Cambridge",""],["Bath",""]], country:"United Kingdom",
+    phone: () => `07${ri(100,999)} ${ri(100000,999999)}`,
+    ssnFmt: () => `${rc(["AB","CD","EF","JG","NP"])} ${ri(10,99)} ${ri(10,99)} ${ri(10,99)} ${rc(["A","B","C","D"])}`},
+  de_DE: {label:"German", first:["Lukas","Anna","Leon","Mia","Finn","Emma","Paul","Lena","Felix","Marie","Jonas","Laura","Elias","Sophie","Noah","Hannah","Ben","Lea","Luis","Sarah"],
+    last:["Müller","Schmidt","Schneider","Fischer","Weber","Meyer","Wagner","Becker","Schulz","Hoffmann","Koch","Richter","Klein","Wolf","Neumann","Schwarz","Zimmermann","Braun","Krüger","Hofmann"],
+    cities:[["München",""],["Hamburg",""],["Köln",""],["Frankfurt",""],["Stuttgart",""],["Leipzig",""],["Dresden",""],["Bonn",""]], country:"Germany",
+    phone: () => `+49 ${ri(150,179)} ${ri(1000000,9999999)}`,
+    ssnFmt: () => `${ri(10,99)} ${ri(100000,999999)} ${rc(["A","B","C"])} ${ri(100,999)}`},
+  fr_FR: {label:"French", first:["Lucas","Emma","Louis","Chloé","Hugo","Léa","Gabriel","Manon","Jules","Camille","Adam","Inès","Raphaël","Sarah","Arthur","Julia","Léon","Zoé","Nathan","Alice"],
+    last:["Martin","Bernard","Dubois","Thomas","Robert","Petit","Durand","Leroy","Moreau","Simon","Laurent","Lefebvre","Michel","Garcia","David","Roux","Vincent","Fournier","Morel","Girard"],
+    cities:[["Lyon",""],["Marseille",""],["Toulouse",""],["Nantes",""],["Nice",""],["Strasbourg",""],["Bordeaux",""],["Lille",""]], country:"France",
+    phone: () => `0${ri(6,7)} ${ri(10,99)} ${ri(10,99)} ${ri(10,99)} ${ri(10,99)}`,
+    ssnFmt: () => `${ri(1,2)} ${ri(10,99)} ${ri(10,99)} ${ri(100,999)} ${ri(100,999)} ${ri(10,99)}`},
+  ja_JP: {label:"Japanese", first:["Haruto","Yui","Sota","Yuna","Ren","Aoi","Riku","Hina","Yuto","Mio","Kaito","Rin","Sora","Sakura","Itsuki","Koharu","Asahi","Ichika","Minato","Tsumugi"],
+    last:["Sato","Suzuki","Takahashi","Tanaka","Watanabe","Ito","Yamamoto","Nakamura","Kobayashi","Kato","Yoshida","Yamada","Sasaki","Yamaguchi","Matsumoto","Inoue","Kimura","Hayashi","Shimizu","Saito"],
+    cities:[["Shibuya",""],["Shinjuku",""],["Yokohama",""],["Osaka",""],["Nagoya",""],["Fukuoka",""],["Sapporo",""],["Kobe",""]], country:"Japan",
+    phone: () => `090-${ri(1000,9999)}-${ri(1000,9999)}`,
+    ssnFmt: () => `${ri(1000,9999)}-${ri(1000,9999)}-${ri(1000,9999)}`},
+};
 
-function rotl(a, b) { return (a << b) | (a >>> (32 - b)); }
-
-// One Salsa20/8 core application on a 16-word (64-byte) block, in place into `out`.
-function salsa208(inBlock, out) {
-  for (let i = 0; i < 16; i++) out[i] = inBlock[i];
-  for (let i = 0; i < 8; i += 2) {
-    out[4]  ^= rotl(out[0]  + out[12], 7);   out[8]  ^= rotl(out[4]  + out[0],  9);
-    out[12] ^= rotl(out[8]  + out[4], 13);   out[0]  ^= rotl(out[12] + out[8], 18);
-    out[9]  ^= rotl(out[5]  + out[1],  7);   out[13] ^= rotl(out[9]  + out[5],  9);
-    out[1]  ^= rotl(out[13] + out[9], 13);   out[5]  ^= rotl(out[1]  + out[13],18);
-    out[14] ^= rotl(out[10] + out[6],  7);   out[2]  ^= rotl(out[14] + out[10], 9);
-    out[6]  ^= rotl(out[2]  + out[14],13);   out[10] ^= rotl(out[6]  + out[2], 18);
-    out[3]  ^= rotl(out[15] + out[11], 7);   out[7]  ^= rotl(out[3]  + out[15], 9);
-    out[11] ^= rotl(out[7]  + out[3], 13);   out[15] ^= rotl(out[11] + out[7], 18);
-
-    out[1]  ^= rotl(out[0]  + out[3],  7);   out[2]  ^= rotl(out[1]  + out[0],  9);
-    out[3]  ^= rotl(out[2]  + out[1], 13);   out[0]  ^= rotl(out[3]  + out[2], 18);
-    out[6]  ^= rotl(out[5]  + out[4],  7);   out[7]  ^= rotl(out[6]  + out[5],  9);
-    out[4]  ^= rotl(out[7]  + out[6], 13);   out[5]  ^= rotl(out[4]  + out[7], 18);
-    out[11] ^= rotl(out[10] + out[9],  7);   out[8]  ^= rotl(out[11] + out[10], 9);
-    out[9]  ^= rotl(out[8]  + out[11],13);   out[10] ^= rotl(out[9]  + out[8], 18);
-    out[12] ^= rotl(out[15] + out[14], 7);   out[13] ^= rotl(out[12] + out[15], 9);
-    out[14] ^= rotl(out[13] + out[12],13);   out[15] ^= rotl(out[14] + out[13],18);
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+function ri(min, max){ // secure random int inclusive, using crypto
+  min = Math.ceil(min); max = Math.floor(max);
+  const range = max - min + 1;
+  if (range <= 0) return min;
+  const buf = new Uint32Array(1);
+  const maxUint = 0xFFFFFFFF;
+  const limit = maxUint - (maxUint % range);
+  let x;
+  do { crypto.getRandomValues(buf); x = buf[0]; } while (x > limit);
+  return min + (x % range);
+}
+function riFast(min, max){ // non-secure, seedable via Math.random (used when a seed is set)
+  min = Math.ceil(min); max = Math.floor(max);
+  return Math.floor(RNG.next() * (max - min + 1)) + min;
+}
+function rf(min, max, decimals=2){
+  const v = RNG.seeded ? RNG.next() : (crypto.getRandomValues(new Uint32Array(1))[0] / 0xFFFFFFFF);
+  return +(min + v * (max - min)).toFixed(decimals);
+}
+function rc(arr){ // random choice
+  return arr[RNG.seeded ? Math.floor(RNG.next() * arr.length) : ri(0, arr.length - 1)];
+}
+function rint(min, max){ return RNG.seeded ? riFast(min, max) : ri(min, max); }
+function shuffle(arr){
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = rint(0, i);
+    [a[i], a[j]] = [a[j], a[i]];
   }
-  for (let i = 0; i < 16; i++) out[i] = (out[i] + inBlock[i]) | 0;
+  return a;
 }
-
-// BlockMix_{Salsa20/8, r} — B is a Uint32Array of length 32*r (2r blocks of 16 words).
-function blockMix(B, r) {
-  const out = new Uint32Array(32 * r);
-  const X = new Uint32Array(16);
-  const T = new Uint32Array(16);
-  X.set(B.subarray((2 * r - 1) * 16, (2 * r - 1) * 16 + 16));
-
-  const Yeven = new Uint32Array(16 * r);
-  const Yodd = new Uint32Array(16 * r);
-  for (let i = 0; i < 2 * r; i++) {
-    for (let k = 0; k < 16; k++) T[k] = X[k] ^ B[i * 16 + k];
-    salsa208(T, X);
-    if (i % 2 === 0) Yeven.set(X, (i / 2) * 16);
-    else Yodd.set(X, ((i - 1) / 2) * 16);
-  }
-  out.set(Yeven, 0);
-  out.set(Yodd, 16 * r);
-  return out;
-}
-
-function yieldToUI() {
-  return new Promise((resolve) => setTimeout(resolve, 0));
-}
-
-// ROMix_r(B, N) — B is Uint32Array of length 32*r. Yields periodically so the
-// browser tab stays responsive during the ~1s of pure computation this needs.
-async function romix(B, N, r) {
-  const blockWords = 32 * r;
-  const V = new Uint32Array(N * blockWords);
-  let X = B;
-  const yieldEvery = Math.max(N >> 4, 1);
-  for (let i = 0; i < N; i++) {
-    V.set(X, i * blockWords);
-    X = blockMix(X, r);
-    if (i % yieldEvery === 0) await yieldToUI();
-  }
-  const mask = N - 1; // N is always a power of two
-  for (let i = 0; i < N; i++) {
-    // Integerify: low 32 bits of the last 64-byte block of X, mod N.
-    const j = X[(2 * r - 1) * 16] & mask;
-    const Xj = new Uint32Array(blockWords);
-    for (let k = 0; k < blockWords; k++) Xj[k] = X[k] ^ V[j * blockWords + k];
-    X = blockMix(Xj, r);
-    if (i % yieldEvery === 0) await yieldToUI();
-  }
-  return X;
-}
-
-function bytesToWordsLE(bytes) {
-  const words = new Uint32Array(bytes.length / 4);
-  const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  for (let i = 0; i < words.length; i++) words[i] = dv.getUint32(i * 4, true);
-  return words;
-}
-
-function wordsToBytesLE(words) {
-  const bytes = new Uint8Array(words.length * 4);
-  const dv = new DataView(bytes.buffer);
-  for (let i = 0; i < words.length; i++) dv.setUint32(i * 4, words[i], true);
-  return bytes;
-}
-
-async function pbkdf2Sha256(passwordBytes, saltBytes, iterations, lengthBytes) {
-  const subtle = (globalThis.crypto && globalThis.crypto.subtle);
-  const key = await subtle.importKey('raw', passwordBytes, { name: 'PBKDF2' }, false, ['deriveBits']);
-  const bits = await subtle.deriveBits(
-    { name: 'PBKDF2', hash: 'SHA-256', salt: saltBytes, iterations },
-    key, lengthBytes * 8
-  );
-  return new Uint8Array(bits);
-}
-
-// scrypt(password, salt, N, r, p, dkLen) -> Uint8Array(dkLen)
-async function scrypt(passwordBytes, saltBytes, N, r, p, dkLen) {
-  const blockBytes = 128 * r;
-  const Bbytes = await pbkdf2Sha256(passwordBytes, saltBytes, 1, p * blockBytes);
-  const outBlocks = new Uint8Array(p * blockBytes);
-  for (let i = 0; i < p; i++) {
-    const chunk = Bbytes.subarray(i * blockBytes, (i + 1) * blockBytes);
-    const words = bytesToWordsLE(chunk);
-    const mixed = await romix(words, N, r);
-    outBlocks.set(wordsToBytesLE(mixed), i * blockBytes);
-  }
-  return await pbkdf2Sha256(passwordBytes, outBlocks, 1, dkLen);
-}
-
-
-'use strict';
-// Implements the exact VaultCrypt v3 .vault container format, matching the
-// Python desktop app byte-for-byte, so files are interchangeable both ways.
-//
-// Format:
-//   MAGIC (8 bytes)            = "VAULTCR3"
-//   scrypt N,r,p (3x uint32 BE)
-//   salt (16 bytes)
-//   base_nonce (8 bytes)
-//   chunk*  = [uint32 BE ciphertext_len][ciphertext (AES-256-GCM, 16-byte tag incl.)]
-//   ... last chunk is the authenticated trailer (AAD = TRAILER_AAD, plaintext = SHA-256 of full content)
-//
-// Plaintext stream (before chunking) = [1 byte is_folder][uint16 BE name_len][name utf-8][raw bytes...]
-
-
-const MAGIC = new TextEncoder().encode('VAULTCR3'); // 8 bytes
-const SALT_LEN = 16;
-const BASE_NONCE_LEN = 8;
-const CHUNK_SIZE = 4 * 1024 * 1024;
-const SCRYPT_N = 65536, SCRYPT_R = 8, SCRYPT_P = 1;
-const TRAILER_AAD = new TextEncoder().encode('VAULTCRYPT-EOF-TRAILER-v3');
-
-class WrongPasswordError extends Error {}
-class CorruptedFileError extends Error {}
-
-function concatBytes(...arrs) {
-  let total = 0;
-  for (const a of arrs) total += a.length;
-  const out = new Uint8Array(total);
-  let off = 0;
-  for (const a of arrs) { out.set(a, off); off += a.length; }
-  return out;
-}
-
-function u32be(n) {
-  const b = new Uint8Array(4);
-  new DataView(b.buffer).setUint32(0, n, false);
-  return b;
-}
-function readU32be(bytes, offset) {
-  return new DataView(bytes.buffer, bytes.byteOffset + offset, 4).getUint32(0, false);
-}
-
-async function deriveKey(password, salt, n = SCRYPT_N, r = SCRYPT_R, p = SCRYPT_P) {
-  const pwBytes = new TextEncoder().encode(password);
-  return await scrypt(pwBytes, salt, n, r, p, 32);
-}
-
-async function importAesKey(rawKeyBytes) {
-  return await crypto.subtle.importKey('raw', rawKeyBytes, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
-}
-
-async function sha256(bytes) {
-  const digest = await crypto.subtle.digest('SHA-256', bytes);
-  return new Uint8Array(digest);
-}
-
-/**
- * Encrypt a single blob of bytes into the .vault container format.
- * @param {Uint8Array} dataBytes - raw content (already-zipped bytes for a folder)
- * @param {string} embeddedName - name to embed (e.g. "photo.png" or "myfolder.zip")
- * @param {boolean} isFolder
- * @param {string} password
- * @param {(frac:number)=>void} [onProgress]
- * @returns {Promise<Uint8Array>} the full .vault file bytes
- */
-async function encryptToVault(dataBytes, embeddedName, isFolder, password, onProgress) {
-  const salt = crypto.getRandomValues(new Uint8Array(SALT_LEN));
-  const baseNonce = crypto.getRandomValues(new Uint8Array(BASE_NONCE_LEN));
-  const rawKey = await deriveKey(password, salt);
-  const aesKey = await importAesKey(rawKey);
-
-  const nameBytes = new TextEncoder().encode(embeddedName);
-  const header = concatBytes(
-    new Uint8Array([isFolder ? 1 : 0]),
-    (() => { const b = new Uint8Array(2); new DataView(b.buffer).setUint16(0, nameBytes.length, false); return b; })(),
-    nameBytes
-  );
-
-  const hasher = { data: [] }; // accumulate for sha256 at the end (simplest correct approach)
-  const parts = [MAGIC, u32be(SCRYPT_N), u32be(SCRYPT_R), u32be(SCRYPT_P), salt, baseNonce];
-
-  const fullPlain = concatBytes(header, dataBytes);
-  const fileHash = await sha256(fullPlain);
-
-  let chunkIndex = 0;
-  let offset = 0;
-  while (offset < fullPlain.length || chunkIndex === 0) {
-    const end = Math.min(offset + CHUNK_SIZE, fullPlain.length);
-    const chunkPlain = fullPlain.subarray(offset, end);
-    const nonce = concatBytes(baseNonce, u32be(chunkIndex));
-    const aad = u32be(chunkIndex); // reused as 4-byte AAD, matches Python struct.pack('>I', idx)
-    const ct = new Uint8Array(await crypto.subtle.encrypt(
-      { name: 'AES-GCM', iv: nonce, additionalData: aad }, aesKey, chunkPlain
-    ));
-    parts.push(u32be(ct.length), ct);
-    chunkIndex++;
-    offset = end;
-    if (onProgress) onProgress(Math.min(offset / Math.max(fullPlain.length, 1), 1) * 0.95);
-    if (offset >= fullPlain.length) break;
-  }
-
-  // trailer chunk: AAD = TRAILER_AAD, plaintext = whole-content SHA-256
-  const trailerNonce = concatBytes(baseNonce, u32be(chunkIndex));
-  const trailerCt = new Uint8Array(await crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv: trailerNonce, additionalData: TRAILER_AAD }, aesKey, fileHash
-  ));
-  parts.push(u32be(trailerCt.length), trailerCt);
-
-  if (onProgress) onProgress(1);
-  return concatBytes(...parts);
-}
-
-/**
- * Decrypt a .vault file's bytes.
- * @returns {Promise<{name:string, isFolder:boolean, data:Uint8Array, verified:boolean}>}
- */
-async function decryptVault(vaultBytes, password, onProgress) {
-  let offset = 0;
-  const magic = vaultBytes.subarray(0, 8);
-  if (hex(magic) !== hex(MAGIC)) {
-    throw new CorruptedFileError('Not a valid VaultCrypt (v3) file.');
-  }
-  offset += 8;
-  const n = readU32be(vaultBytes, offset); offset += 4;
-  const r = readU32be(vaultBytes, offset); offset += 4;
-  const p = readU32be(vaultBytes, offset); offset += 4;
-  const salt = vaultBytes.subarray(offset, offset + SALT_LEN); offset += SALT_LEN;
-  const baseNonce = vaultBytes.subarray(offset, offset + BASE_NONCE_LEN); offset += BASE_NONCE_LEN;
-
-  const rawKey = await deriveKey(password, salt, n, r, p);
-  const aesKey = await importAesKey(rawKey);
-
-  // Parse all chunk records first (length-prefixed), so we know which is last.
-  const records = [];
-  let o = offset;
-  while (o < vaultBytes.length) {
-    if (o + 4 > vaultBytes.length) throw new CorruptedFileError('File is truncated (incomplete chunk length).');
-    const ctLen = readU32be(vaultBytes, o); o += 4;
-    if (o + ctLen > vaultBytes.length) throw new CorruptedFileError('File is truncated (incomplete chunk data).');
-    records.push(vaultBytes.subarray(o, o + ctLen));
-    o += ctLen;
-  }
-  if (records.length === 0) throw new CorruptedFileError('File has no data (missing trailer).');
-
-  const totalRecords = records.length;
-  const dataParts = [];
-  let trailerDigest = null;
-
-  for (let i = 0; i < totalRecords; i++) {
-    const isLast = i === totalRecords - 1;
-    const nonce = concatBytes(baseNonce, u32be(i));
-    const aad = isLast ? TRAILER_AAD : u32be(i);
-    let pt;
-    try {
-      pt = new Uint8Array(await crypto.subtle.decrypt(
-        { name: 'AES-GCM', iv: nonce, additionalData: aad }, aesKey, records[i]
-      ));
-    } catch (e) {
-      if (i === 0) throw new WrongPasswordError('Incorrect password, or this file is corrupted/tampered with.');
-      throw new CorruptedFileError(`Integrity check failed at chunk ${i} — the file is corrupted, truncated, or was tampered with.`);
+// Simple seedable PRNG (mulberry32) so the optional "seed" field gives reproducible runs.
+const RNG = {
+  seeded: false, _state: 0,
+  seed(str){
+    if (!str) { this.seeded = false; return; }
+    let h = 1779033703 ^ str.length;
+    for (let i = 0; i < str.length; i++) {
+      h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+      h = (h << 13) | (h >>> 19);
     }
-    if (isLast) trailerDigest = pt;
-    else dataParts.push(pt);
-    if (onProgress) onProgress((i + 1) / totalRecords);
+    this._state = h >>> 0; this.seeded = true;
+  },
+  next(){
+    let t = this._state += 0x6D2B79F5;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   }
+};
 
-  const fullPlain = concatBytes(...dataParts);
-  if (fullPlain.length < 3) throw new CorruptedFileError('File is corrupted (missing embedded header).');
-  const isFolder = fullPlain[0] === 1;
-  const nameLen = new DataView(fullPlain.buffer, fullPlain.byteOffset + 1, 2).getUint16(0, false);
-  if (fullPlain.length < 3 + nameLen) throw new CorruptedFileError('File is corrupted (missing embedded header).');
-  const name = new TextDecoder().decode(fullPlain.subarray(3, 3 + nameLen));
-  const data = fullPlain.subarray(3 + nameLen);
+function fibSeq(n){
+  if (n <= 0) return 0;
+  let a = 1, b = 1;
+  for (let i = 0; i < n - 1; i++){ [a, b] = [b, a + b]; }
+  return a;
+}
 
-  const computedHash = await sha256(fullPlain);
-  const verified = trailerDigest !== null && hex(computedHash) === hex(trailerDigest);
-  if (!verified) {
-    throw new CorruptedFileError('Integrity check failed — decrypted content does not match the original checksum.');
+function caesarShift(text, shift){
+  shift = ((shift % 26) + 26) % 26;
+  let out = "";
+  for (const ch of text){
+    if (ch >= "a" && ch <= "z") out += String.fromCharCode((ch.charCodeAt(0) - 97 + shift) % 26 + 97);
+    else if (ch >= "A" && ch <= "Z") out += String.fromCharCode((ch.charCodeAt(0) - 65 + shift) % 26 + 65);
+    else out += ch;
   }
-
-  return { name, isFolder, data, verified };
+  return out;
 }
 
-function hex(bytes) {
-  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-</script>
-<script>
-/* ==================== App logic ==================== */
-'use strict';
-
-const ENC_EXT = '.vault';
-const PREVIEW_LIMIT = 100 * 1024 * 1024; // 100 MiB, matches desktop app
-const TEXT_EXTENSIONS = new Set(['.txt','.md','.markdown','.py','.js','.ts','.jsx','.tsx','.json','.csv','.tsv','.log','.xml','.html','.htm','.css','.scss','.yaml','.yml','.ini','.cfg','.conf','.c','.h','.cpp','.hpp','.java','.go','.rs','.sh','.bat','.ps1','.sql','.toml','.rst','.env']);
-const IMAGE_EXTENSIONS = new Set(['.png','.jpg','.jpeg','.gif','.bmp','.webp','.ico']);
-
-let mode = 'encrypt';
-let queue = []; // {id, kind:'file'|'folder', name, size, file (for file), entries (for folder: [{relPath,file}])}
-let nextId = 1;
-let selectedId = null;
-let running = false;
-
-const $ = (id) => document.getElementById(id);
-
-/* ---------- small utilities ---------- */
-function humanSize(n) {
-  n = Number(n);
-  const units = ['B','KB','MB','GB','TB'];
-  for (const u of units) {
-    if (n < 1024) return u === 'B' ? `${n.toFixed(0)} ${u}` : `${n.toFixed(1)} ${u}`;
-    n /= 1024;
+function luhnCheckDigit(digitsWithoutCheck){
+  let sum = 0, alt = true;
+  for (let i = digitsWithoutCheck.length - 1; i >= 0; i--){
+    let d = digitsWithoutCheck[i];
+    if (alt){ d *= 2; if (d > 9) d -= 9; }
+    sum += d; alt = !alt;
   }
-  return `${n.toFixed(1)} PB`;
+  return (10 - (sum % 10)) % 10;
 }
-function log(text) {
-  const el = $('log');
-  el.textContent += (el.textContent ? '\n' : '') + text;
-  el.scrollTop = el.scrollHeight;
-}
-function toast(message, isError) {
-  const area = $('toastArea');
-  const t = document.createElement('div');
-  t.className = 'toast' + (isError ? ' error' : '');
-  t.textContent = message;
-  area.appendChild(t);
-  setTimeout(() => t.remove(), 6000);
-  log((isError ? '⚠ ' : '') + message);
-}
-function setPhase(text) { $('phaseLabel').textContent = text; }
-function setOverall(frac) {
-  const pct = Math.round(frac * 100);
-  $('overallProgress').style.width = pct + '%';
-  $('overallPct').textContent = pct + '%';
-}
-function setItemProgress(frac) { $('itemProgress').style.width = Math.round(frac * 100) + '%'; }
-
-function base64UrlEncode(bytes) {
-  let bin = '';
-  for (const b of bytes) bin += String.fromCharCode(b);
-  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+function fakeCardNumber(brand){
+  let prefix, length;
+  if (brand === "American Express"){ prefix = rc(["34","37"]); length = 15; }
+  else if (brand === "Discover"){ prefix = "6011"; length = 16; }
+  else if (brand === "Mastercard"){ prefix = String(ri(51,55)); length = 16; }
+  else { prefix = "4"; length = 16; } // Visa
+  const digits = prefix.split("").map(Number);
+  while (digits.length < length - 1) digits.push(ri(0,9));
+  digits.push(luhnCheckDigit(digits));
+  const s = digits.join("");
+  return s.replace(/(.{4})/g, "$1 ").trim();
 }
 
-function downloadBytes(bytes, filename) {
-  const blob = new Blob([bytes], { type: 'application/octet-stream' });
+/* ---- MD5 (Web Crypto has no MD5; standard RFC1321 algorithm, ~60 lines) ---- */
+function md5(str){
+  function rl(n,c){return (n<<c)|(n>>>(32-c));}
+  function ff(a,b,c,d,x,s,t){return rl((a+((b&c)|(~b&d))+x+t)|0,s)+b|0;}
+  function gg(a,b,c,d,x,s,t){return rl((a+((b&d)|(c&~d))+x+t)|0,s)+b|0;}
+  function hh(a,b,c,d,x,s,t){return rl((a+(b^c^d)+x+t)|0,s)+b|0;}
+  function ii(a,b,c,d,x,s,t){return rl((a+(c^(b|~d))+x+t)|0,s)+b|0;}
+  function toWords(s){
+    const bytes = new TextEncoder().encode(s);
+    const n = ((bytes.length + 8) >> 6) + 1;
+    const words = new Array(n * 16).fill(0);
+    for (let i = 0; i < bytes.length; i++) words[i >> 2] |= bytes[i] << ((i % 4) * 8);
+    words[bytes.length >> 2] |= 0x80 << ((bytes.length % 4) * 8);
+    words[n * 16 - 2] = bytes.length * 8;
+    return words;
+  }
+  const x = toWords(str);
+  let a=1732584193,b=-271733879,c=-1732584194,d=271733878;
+  const T = []; for (let i=0;i<64;i++) T[i] = Math.floor(Math.abs(Math.sin(i+1))*4294967296);
+  for (let i=0;i<x.length;i+=16){
+    let [aa,bb,cc,dd]=[a,b,c,d];
+    a=ff(a,b,c,d,x[i+0],7,T[0]); d=ff(d,a,b,c,x[i+1],12,T[1]); c=ff(c,d,a,b,x[i+2],17,T[2]); b=ff(b,c,d,a,x[i+3],22,T[3]);
+    a=ff(a,b,c,d,x[i+4],7,T[4]); d=ff(d,a,b,c,x[i+5],12,T[5]); c=ff(c,d,a,b,x[i+6],17,T[6]); b=ff(b,c,d,a,x[i+7],22,T[7]);
+    a=ff(a,b,c,d,x[i+8],7,T[8]); d=ff(d,a,b,c,x[i+9],12,T[9]); c=ff(c,d,a,b,x[i+10],17,T[10]); b=ff(b,c,d,a,x[i+11],22,T[11]);
+    a=ff(a,b,c,d,x[i+12],7,T[12]); d=ff(d,a,b,c,x[i+13],12,T[13]); c=ff(c,d,a,b,x[i+14],17,T[14]); b=ff(b,c,d,a,x[i+15],22,T[15]);
+    a=gg(a,b,c,d,x[i+1],5,T[16]); d=gg(d,a,b,c,x[i+6],9,T[17]); c=gg(c,d,a,b,x[i+11],14,T[18]); b=gg(b,c,d,a,x[i+0],20,T[19]);
+    a=gg(a,b,c,d,x[i+5],5,T[20]); d=gg(d,a,b,c,x[i+10],9,T[21]); c=gg(c,d,a,b,x[i+15],14,T[22]); b=gg(b,c,d,a,x[i+4],20,T[23]);
+    a=gg(a,b,c,d,x[i+9],5,T[24]); d=gg(d,a,b,c,x[i+14],9,T[25]); c=gg(c,d,a,b,x[i+3],14,T[26]); b=gg(b,c,d,a,x[i+8],20,T[27]);
+    a=gg(a,b,c,d,x[i+13],5,T[28]); d=gg(d,a,b,c,x[i+2],9,T[29]); c=gg(c,d,a,b,x[i+7],14,T[30]); b=gg(b,c,d,a,x[i+12],20,T[31]);
+    a=hh(a,b,c,d,x[i+5],4,T[32]); d=hh(d,a,b,c,x[i+8],11,T[33]); c=hh(c,d,a,b,x[i+11],16,T[34]); b=hh(b,c,d,a,x[i+14],23,T[35]);
+    a=hh(a,b,c,d,x[i+1],4,T[36]); d=hh(d,a,b,c,x[i+4],11,T[37]); c=hh(c,d,a,b,x[i+7],16,T[38]); b=hh(b,c,d,a,x[i+10],23,T[39]);
+    a=hh(a,b,c,d,x[i+13],4,T[40]); d=hh(d,a,b,c,x[i+0],11,T[41]); c=hh(c,d,a,b,x[i+3],16,T[42]); b=hh(b,c,d,a,x[i+6],23,T[43]);
+    a=hh(a,b,c,d,x[i+9],4,T[44]); d=hh(d,a,b,c,x[i+12],11,T[45]); c=hh(c,d,a,b,x[i+15],16,T[46]); b=hh(b,c,d,a,x[i+2],23,T[47]);
+    a=ii(a,b,c,d,x[i+0],6,T[48]); d=ii(d,a,b,c,x[i+7],10,T[49]); c=ii(c,d,a,b,x[i+14],15,T[50]); b=ii(b,c,d,a,x[i+5],21,T[51]);
+    a=ii(a,b,c,d,x[i+12],6,T[52]); d=ii(d,a,b,c,x[i+3],10,T[53]); c=ii(c,d,a,b,x[i+10],15,T[54]); b=ii(b,c,d,a,x[i+1],21,T[55]);
+    a=ii(a,b,c,d,x[i+8],6,T[56]); d=ii(d,a,b,c,x[i+15],10,T[57]); c=ii(c,d,a,b,x[i+6],15,T[58]); b=ii(b,c,d,a,x[i+13],21,T[59]);
+    a=ii(a,b,c,d,x[i+4],6,T[60]); d=ii(d,a,b,c,x[i+11],10,T[61]); c=ii(c,d,a,b,x[i+2],15,T[62]); b=ii(b,c,d,a,x[i+9],21,T[63]);
+    a=(a+aa)|0; b=(b+bb)|0; c=(c+cc)|0; d=(d+dd)|0;
+  }
+  function toHex(n){
+    let s = "";
+    for (let i=0;i<4;i++) s += ((n>>(i*8))&0xff).toString(16).padStart(2,"0");
+    return s;
+  }
+  return toHex(a)+toHex(b)+toHex(c)+toHex(d);
+}
+
+async function sha(str, algo){ // algo: 'SHA-1' | 'SHA-256' | 'SHA-384' | 'SHA-512'
+  const buf = await crypto.subtle.digest(algo, new TextEncoder().encode(str));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2,"0")).join("");
+}
+
+function downloadBlob(filename, content, mime){
+  const blob = new Blob([content], {type: mime});
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url; a.download = filename;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 4000);
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
 
-/* ---------- password strength (mirrors the desktop app's scoring) ---------- */
-function passwordStrength(pw) {
-  if (!pw) return { score: 0, label: 'Empty' };
-  let score = Math.min(pw.length * 4, 40);
-  let classes = 0;
-  if (/[a-z]/.test(pw)) classes++;
-  if (/[A-Z]/.test(pw)) classes++;
-  if (/[0-9]/.test(pw)) classes++;
-  if (/[^A-Za-z0-9]/.test(pw)) classes++;
-  score += classes * 12;
-  if (pw.length < 8) score = Math.min(score, 30);
-  score = Math.max(0, Math.min(score, 100));
-  let label = score < 30 ? 'Weak' : score < 55 ? 'Fair' : score < 80 ? 'Good' : 'Strong';
-  return { score, label };
+function el(tag, attrs={}, children=[]){
+  const node = document.createElement(tag);
+  for (const [k,v] of Object.entries(attrs)){
+    if (k === "class") node.className = v;
+    else if (k === "html") node.innerHTML = v;
+    else if (k.startsWith("on") && typeof v === "function") node.addEventListener(k.slice(2), v);
+    else if (v !== undefined && v !== null) node.setAttribute(k, v);
+  }
+  for (const c of [].concat(children)){
+    if (c === null || c === undefined) continue;
+    node.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+  }
+  return node;
 }
-function generateStrongPassword(length = 20) {
-  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[]{}';
-  while (true) {
-    const bytes = crypto.getRandomValues(new Uint8Array(length));
-    let pw = '';
-    for (let i = 0; i < length; i++) pw += alphabet[bytes[i] % alphabet.length];
-    if (/[a-z]/.test(pw) && /[A-Z]/.test(pw) && /[0-9]/.test(pw) && /[!@#$%^&*()\-_=+\[\]{}]/.test(pw)) return pw;
+
+let toastTimer = null;
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2600);
+}
+function copyText(text){
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => toast("Copied to clipboard")).catch(() => toast("Copy failed"));
+}
+
+/* ============================================================
+   APP SHELL
+   ============================================================ */
+const NAV = []; // populated by each page module via registerPage()
+const PAGES = {};
+let currentKey = null;
+const historyEntries = [];
+
+function registerPage(key, icon, label, group, mount){
+  NAV.push({key, icon, label, group});
+  PAGES[key] = mount;
+}
+
+function logHistory(category, items){
+  if (!items || !items.length) return;
+  const stamp = new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit", second:"2-digit"});
+  historyEntries.unshift({stamp, category, items});
+  if (historyEntries.length > 200) historyEntries.length = 200;
+  renderHistory();
+  toast(`Generated ${items.length} item${items.length===1?"":"s"} — ${category}`);
+}
+
+function renderHistory(){
+  const list = document.getElementById("historyList");
+  list.innerHTML = "";
+  if (!historyEntries.length){
+    list.appendChild(el("div", {class:"hint", style:"padding:16px;"}, "Nothing generated yet."));
+    return;
+  }
+  for (const entry of historyEntries){
+    const preview = entry.items.slice(0,3).join(", ") + (entry.items.length > 3 ? ` … (+${entry.items.length-3})` : "");
+    const node = el("div", {class:"history-entry", onclick:() => copyText(entry.items.join("\n"))}, [
+      el("time", {}, entry.stamp),
+      el("div", {}, `${entry.category}: ${preview}`)
+    ]);
+    list.appendChild(node);
   }
 }
 
-/* ---------- key files (same JSON format as the desktop app) ---------- */
-function generateKeyfileSecret() {
-  return base64UrlEncode(crypto.getRandomValues(new Uint8Array(32)));
-}
-function keyfileJsonBytes(secret) {
-  return new TextEncoder().encode(JSON.stringify({ format: 'vaultcrypt-keyfile-v1', key: secret }, null, 2));
-}
-function readKeyfileText(text) {
-  text = text.trim();
-  if (!text) throw new Error('Key file is empty.');
-  try {
-    const obj = JSON.parse(text);
-    if (obj && typeof obj.key === 'string' && obj.key) return obj.key;
-  } catch (e) { /* fall through to plain-text */ }
-  return text;
-}
-
-/* ---------- content classification for preview ---------- */
-function sniffImage(bytes) {
-  if (bytes.length >= 8 && bytes[0]===0x89 && bytes[1]===0x50 && bytes[2]===0x4e && bytes[3]===0x47) return true; // PNG
-  if (bytes.length >= 3 && bytes[0]===0xff && bytes[1]===0xd8 && bytes[2]===0xff) return true; // JPEG
-  if (bytes.length >= 6) {
-    const s = String.fromCharCode(...bytes.subarray(0,6));
-    if (s === 'GIF87a' || s === 'GIF89a') return true;
-  }
-  if (bytes.length >= 2 && bytes[0]===0x42 && bytes[1]===0x4d) return true; // BMP
-  if (bytes.length >= 12 && String.fromCharCode(...bytes.subarray(0,4))==='RIFF' && String.fromCharCode(...bytes.subarray(8,12))==='WEBP') return true;
-  return false;
-}
-function extOf(name) {
-  const i = name.lastIndexOf('.');
-  return i === -1 ? '' : name.slice(i).toLowerCase();
-}
-function classifyContent(name, bytes) {
-  if (sniffImage(bytes)) return 'image';
-  const ext = extOf(name);
-  if (bytes.length >= 4 && String.fromCharCode(...bytes.subarray(0,4)) === '%PDF' || ext === '.pdf') return 'pdf';
-  if (IMAGE_EXTENSIONS.has(ext)) return 'image';
-  if (TEXT_EXTENSIONS.has(ext)) return 'text';
-  if (bytes.length === 0) return 'text';
-  const sample = bytes.subarray(0, 8192);
-  let decoded;
-  try { decoded = new TextDecoder('utf-8', { fatal: true }).decode(sample); }
-  catch (e) { return 'binary'; }
-  if (!decoded) return 'text';
-  let printable = 0;
-  for (const ch of decoded) {
-    const c = ch.codePointAt(0);
-    if (c === 9 || c === 10 || c === 13 || (c >= 32 && c < 127) || c > 159) printable++;
-  }
-  return (printable / decoded.length) > 0.95 ? 'text' : 'binary';
-}
-function hexDump(bytes, width = 16) {
-  const lines = [];
-  for (let i = 0; i < bytes.length; i += width) {
-    const chunk = bytes.subarray(i, i + width);
-    const hexPart = Array.from(chunk).map(b => b.toString(16).padStart(2,'0')).join(' ').padEnd(width*3, ' ');
-    const asciiPart = Array.from(chunk).map(b => (b >= 32 && b < 127) ? String.fromCharCode(b) : '.').join('');
-    lines.push(`${i.toString(16).padStart(8,'0')}  ${hexPart}  ${asciiPart}`);
-  }
-  return lines.join('\n');
-}
-
-/* ---------- queue management ---------- */
-function addFileItem(file) {
-  if (mode === 'decrypt' && !file.name.toLowerCase().endsWith(ENC_EXT)) {
-    log(`Skipped "${file.name}" (not a ${ENC_EXT} file)`); return;
-  }
-  if (mode === 'encrypt' && file.name.toLowerCase().endsWith(ENC_EXT)) {
-    log(`Skipped "${file.name}" (already encrypted)`); return;
-  }
-  const item = { id: nextId++, kind: 'file', name: file.name, size: file.size, file };
-  queue.push(item);
-  selectedId = item.id;
-  renderQueue();
-}
-function addFolderItem(name, entries) {
-  if (mode === 'decrypt') { log('Folders can only be added in Encrypt mode.'); return; }
-  const size = entries.reduce((s, e) => s + e.file.size, 0);
-  const item = { id: nextId++, kind: 'folder', name, size, entries };
-  queue.push(item);
-  selectedId = item.id;
-  renderQueue();
-}
-function renderQueue() {
-  const dz = $('dropzone');
-  dz.querySelectorAll('.queue-item').forEach(n => n.remove());
-  const hint = $('emptyHint');
-  hint.style.display = queue.length ? 'none' : 'flex';
-  for (const item of queue) {
-    const div = document.createElement('div');
-    div.className = 'queue-item' + (item.id === selectedId ? ' selected' : '');
-    div.dataset.id = item.id;
-    const icon = item.kind === 'folder' ? '📁' : (item.name.endsWith(ENC_EXT) ? '🔒' : '📄');
-    div.innerHTML = `<span>${icon}</span><span class="qname"></span><span class="qsize">${humanSize(item.size)}</span>`;
-    div.querySelector('.qname').textContent = item.name;
-    div.addEventListener('click', () => { selectedId = item.id; renderQueue(); });
-    div.addEventListener('dblclick', () => { selectedId = item.id; renderQueue(); previewSelected(); });
-    dz.appendChild(div);
-  }
-  $('queueCount').textContent = `${queue.length} item${queue.length === 1 ? '' : 's'}`;
-}
-function clearQueue() { queue = []; selectedId = null; renderQueue(); }
-function removeSelected() {
-  queue = queue.filter(i => i.id !== selectedId);
-  selectedId = null;
-  renderQueue();
-}
-
-/* ---------- folder traversal (drag & drop of a directory) ---------- */
-function readEntriesPromise(reader) {
-  return new Promise((resolve, reject) => reader.readEntries(resolve, reject));
-}
-async function traverseFileTree(entry, path, fileList) {
-  const fullPath = path + entry.name;
-  if (entry.isFile) {
-    const file = await new Promise((res, rej) => entry.file(res, rej));
-    fileList.push({ relPath: fullPath, file });
-  } else if (entry.isDirectory) {
-    const reader = entry.createReader();
-    let entries;
-    do {
-      entries = await readEntriesPromise(reader);
-      for (const e of entries) await traverseFileTree(e, fullPath + '/', fileList);
-    } while (entries.length > 0);
-  }
-}
-async function handleDroppedItems(dataTransferItems) {
-  for (let i = 0; i < dataTransferItems.length; i++) {
-    const item = dataTransferItems[i];
-    if (item.kind !== 'file') continue;
-    const entry = item.webkitGetAsEntry ? item.webkitGetAsEntry() : null;
-    if (entry && entry.isDirectory) {
-      const fileList = [];
-      await traverseFileTree(entry, '', fileList);
-      addFolderItem(entry.name, fileList);
-    } else {
-      const file = item.getAsFile();
-      if (file) addFileItem(file);
+function renderSidebar(){
+  const nav = document.getElementById("navList");
+  nav.innerHTML = "";
+  let lastGroup = null;
+  for (const item of NAV){
+    if (item.group !== lastGroup){
+      nav.appendChild(el("div", {class:"nav-group-label"}, item.group));
+      lastGroup = item.group;
     }
+    const node = el("div", {class:"nav-item" + (item.key === currentKey ? " active" : ""), onclick:() => selectPage(item.key)}, [
+      el("span", {class:"icon"}, item.icon),
+      el("span", {}, item.label)
+    ]);
+    node.dataset.key = item.key;
+    nav.appendChild(node);
   }
 }
 
-/* ---------- mode switching ---------- */
-function setMode(newMode) {
-  mode = newMode;
-  const isEncrypt = mode === 'encrypt';
-  $('modeEncryptBtn').classList.toggle('active', isEncrypt);
-  $('modeDecryptBtn').classList.toggle('active', !isEncrypt);
-  $('confirmRow').style.display = isEncrypt ? 'block' : 'none';
-  $('strengthBarOuter').style.display = isEncrypt ? 'block' : 'none';
-  $('strengthLabel').style.display = isEncrypt ? 'block' : 'none';
-  $('genPasswordBtn').style.display = isEncrypt ? 'inline-block' : 'none';
-  $('genKeyfileBtn').style.display = isEncrypt ? 'inline-block' : 'none';
-  $('addFolderBtn').style.display = isEncrypt ? 'inline-block' : 'none';
-  $('keyfileHint').textContent = isEncrypt
-    ? 'Use a key file instead of typing a password — great for backups.'
-    : 'Import the key file this was encrypted with instead of typing the password.';
-  $('startBtn').textContent = isEncrypt ? 'Start Encryption' : 'Start Decryption';
-  clearQueue();
+function selectPage(key){
+  currentKey = key;
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.toggle("active", n.dataset.key === key));
+  const content = document.getElementById("content");
+  content.innerHTML = "";
+  const page = el("div", {class:"page active"});
+  content.appendChild(page);
+  PAGES[key](page);
+  document.getElementById("sidebar").classList.remove("open");
+  content.scrollTop = 0;
 }
 
-/* ---------- maybe auto-switch mode when dropped/added content clearly belongs to the other mode ---------- */
-function maybeOfferModeSwitch(vaultCount, otherCount, sampleName) {
-  if (queue.length > 0) return;
-  if (mode === 'encrypt' && vaultCount > 0 && otherCount === 0) {
-    if (confirm(`"${sampleName}" looks like an encrypted ${ENC_EXT} file.\nSwitch to Decrypt mode?`)) {
-      setMode('decrypt');
-    }
-  } else if (mode === 'decrypt' && otherCount > 0 && vaultCount === 0) {
-    if (confirm(`These items aren't encrypted ${ENC_EXT} files.\nSwitch to Encrypt mode?`)) {
-      setMode('encrypt');
-    }
-  }
+/* ---- Command palette ---- */
+let paletteSel = 0, paletteMatches = [];
+function openPalette(){
+  document.getElementById("palette-overlay").classList.add("show");
+  const input = document.getElementById("paletteInput");
+  input.value = ""; input.focus();
+  renderPaletteResults("");
 }
-
-/* ---------- key file drop detection ---------- */
-async function tryHandleKeyfileDrop(files) {
-  if (files.length === 1 && files[0].name.toLowerCase().endsWith('.key')) {
-    await applyKeyfile(files[0]);
-    return true;
+function closePalette(){ document.getElementById("palette-overlay").classList.remove("show"); }
+function renderPaletteResults(q){
+  q = q.trim().toLowerCase();
+  paletteMatches = NAV.filter(i => !q || i.label.toLowerCase().includes(q) || i.group.toLowerCase().includes(q));
+  paletteSel = 0;
+  const box = document.getElementById("paletteResults");
+  box.innerHTML = "";
+  if (!paletteMatches.length){
+    box.appendChild(el("div", {class:"palette-empty"}, "No matching tools."));
+    return;
   }
-  return false;
-}
-async function applyKeyfile(file) {
-  try {
-    const text = await file.text();
-    const secret = readKeyfileText(text);
-    $('pwField').value = secret;
-    if (mode === 'encrypt') $('pwConfirm').value = secret;
-    onPasswordChanged();
-    log(`Imported key from "${file.name}".`);
-  } catch (e) {
-    toast(`Could not read key file: ${e.message}`, true);
-  }
-}
-
-/* ---------- password field wiring ---------- */
-function onPasswordChanged() {
-  const pw = $('pwField').value;
-  const { score, label } = passwordStrength(pw);
-  const bar = $('strengthBar');
-  bar.style.width = score + '%';
-  const colors = { Empty: '#3a3f52', Weak: '#f47174', Fair: '#f5a623', Good: '#5865f2', Strong: '#3ecf8e' };
-  bar.style.background = colors[label];
-  $('strengthLabel').textContent = pw ? label : '';
-}
-
-/* ---------- encryption / decryption pipeline ---------- */
-async function zipFolder(entries, onProgress) {
-  const zip = new JSZip();
-  for (const { relPath, file } of entries) {
-    zip.file(relPath, await file.arrayBuffer());
-  }
-  return await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' }, (meta) => {
-    if (onProgress) onProgress(meta.percent / 100);
+  paletteMatches.forEach((item, i) => {
+    const node = el("div", {class:"palette-item" + (i===0?" sel":""), onclick:() => { selectPage(item.key); closePalette(); }}, [
+      el("span", {class:"icon"}, item.icon),
+      el("span", {}, item.label),
+    ]);
+    box.appendChild(node);
   });
 }
+function movePaletteSel(delta){
+  if (!paletteMatches.length) return;
+  paletteSel = (paletteSel + delta + paletteMatches.length) % paletteMatches.length;
+  [...document.querySelectorAll(".palette-item")].forEach((n,i) => n.classList.toggle("sel", i===paletteSel));
+}
 
-async function processQueueItem(item, isEncrypt, password) {
-  if (isEncrypt) {
-    let dataBytes, embeddedName, isFolder;
-    if (item.kind === 'folder') {
-      setPhase(`Compressing folder "${item.name}"…`);
-      dataBytes = await zipFolder(item.entries, (f) => setItemProgress(f * 0.3));
-      embeddedName = item.name + '.zip';
-      isFolder = true;
-    } else {
-      dataBytes = new Uint8Array(await item.file.arrayBuffer());
-      embeddedName = item.name;
-      isFolder = false;
+/* ---- Theme ---- */
+let isDark = true;
+function applyTheme(){
+  document.documentElement.classList.toggle("light", !isDark);
+  document.getElementById("themeToggleLabel").textContent = isDark ? "☀ Light mode" : "🌙 Dark mode";
+}
+
+/* ============================================================
+   SHARED PAGE-BUILDING HELPERS
+   ============================================================ */
+function pageHeader(container, title, subtitle){
+  container.appendChild(el("div", {class:"page-head"}, [
+    el("h2", {class:"page-title"}, title),
+    el("div", {class:"page-sub"}, subtitle),
+  ]));
+}
+function pageBody(container, extraClass=""){
+  const body = el("div", {class:"page-body " + extraClass});
+  container.appendChild(body);
+  return body;
+}
+function controlsCard(body){
+  const card = el("div", {class:"card controls-card"});
+  body.appendChild(card);
+  return card;
+}
+function fieldRow(labelText, widget, wide=false){
+  return el("div", {class:"field-row" + (wide ? " wide" : "")}, [el("label", {}, labelText), widget]);
+}
+function checkField(labelText, checked=false){
+  const input = el("input", {type:"checkbox"});
+  input.checked = checked;
+  const wrap = el("label", {class:"field-check"}, [input, document.createTextNode(labelText)]);
+  return {wrap, input};
+}
+function makeSelect(options, defaultIndex=0){
+  const sel = document.createElement("select");
+  options.forEach(opt => {
+    const [value,label] = Array.isArray(opt) ? opt : [opt,opt];
+    const o = document.createElement("option");
+    o.value = value; o.textContent = label;
+    sel.appendChild(o);
+  });
+  sel.selectedIndex = defaultIndex;
+  return sel;
+}
+function makeNumber(min,max,value,step=1){
+  const input = el("input", {type:"number", min, max, step});
+  input.value = value;
+  return input;
+}
+function makeText(placeholder="", value=""){
+  const input = el("input", {type:"text", placeholder});
+  input.value = value;
+  return input;
+}
+function makeTextarea(placeholder="", rows=6){
+  return el("textarea", {placeholder, rows});
+}
+function primaryButton(labelText, onClick){
+  return el("button", {class:"primary", onclick:onClick}, labelText);
+}
+
+/**
+ * Builds a standard "results" column: header (title, count, copy/export/clear),
+ * a list of generated strings, and a hint. Returns an API to set/get items.
+ */
+function resultsColumn(body, opts={}){
+  const col = el("div", {class:"results-col"});
+  body.appendChild(col);
+
+  const countLabel = el("span", {class:"stat"}, "");
+  const head = el("div", {class:"results-head"}, [
+    el("h3", {}, "Results"),
+    countLabel,
+    el("div", {class:"spacer"}),
+  ]);
+
+  const copyAllBtn = el("button", {class:"ghost"}, "Copy All");
+  const fmtSelect = makeSelect([["txt","TXT"],["csv","CSV"],["json","JSON"]]);
+  fmtSelect.style.width = "auto";
+  const exportBtn = el("button", {class:"ghost"}, "Export");
+  const clearBtn = el("button", {class:"ghost"}, "Clear");
+  head.append(copyAllBtn, fmtSelect, exportBtn, clearBtn);
+  col.appendChild(head);
+
+  const list = el("div", {class:"results-list"});
+  list.appendChild(el("div", {class:"empty"}, "Nothing generated yet — set your options and click Generate."));
+  col.appendChild(list);
+  col.appendChild(el("div", {class:"hint"}, opts.hint || "Click any result to copy it."));
+
+  let items = [];
+  function render(){
+    list.innerHTML = "";
+    if (!items.length){
+      list.appendChild(el("div", {class:"empty"}, "Nothing generated yet — set your options and click Generate."));
+      countLabel.textContent = "";
+      return;
     }
-    setPhase(`Encrypting "${item.name}"…`);
-    const vaultBytes = await encryptToVault(dataBytes, embeddedName, isFolder, password, (f) => {
-      setItemProgress(isFolder ? 0.3 + f * 0.7 : f);
+    items.forEach(text => {
+      const badge = el("span", {class:"copied-badge"}, "copied ✓");
+      const row = el("div", {class:"result-item"}, [el("span", {}, text), badge]);
+      row.addEventListener("click", () => {
+        copyText(text);
+        row.classList.add("flash");
+        setTimeout(() => row.classList.remove("flash"), 900);
+      });
+      list.appendChild(row);
     });
-    const outName = item.name + ENC_EXT;
-    if ($('autoDownloadChk').checked) downloadBytes(vaultBytes, outName);
-    log(`✔ Encrypted "${item.name}" → ${outName}`);
-    return { outName, bytes: vaultBytes };
-  } else {
-    setPhase(`Decrypting "${item.name}"…`);
-    const vaultBytes = new Uint8Array(await item.file.arrayBuffer());
-    const result = await decryptVault(vaultBytes, password, (f) => setItemProgress(f));
-    if (result.isFolder) {
-      const outName = result.name; // already "<folder>.zip"
-      if ($('autoDownloadChk').checked) downloadBytes(result.data, outName);
-      log(`✔ Decrypted "${item.name}" → ${outName} (zip — unzip to restore the folder)`);
-      return { outName, bytes: result.data };
-    } else {
-      if ($('autoDownloadChk').checked) downloadBytes(result.data, result.name);
-      log(`✔ Decrypted "${item.name}" → ${result.name}`);
-      return { outName: result.name, bytes: result.data };
-    }
+    countLabel.textContent = `${items.length} item${items.length===1?"":"s"}`;
   }
+  function setItems(newItems, category){
+    items = newItems;
+    render();
+    if (category) logHistory(category, items);
+  }
+  copyAllBtn.addEventListener("click", () => copyText(items.join("\n")));
+  clearBtn.addEventListener("click", () => { items = []; render(); });
+  exportBtn.addEventListener("click", () => {
+    if (!items.length){ toast("Nothing to export yet"); return; }
+    const fmt = fmtSelect.value;
+    const base = (opts.filenameBase || "results");
+    if (fmt === "txt") downloadBlob(`${base}.txt`, items.join("\n"), "text/plain");
+    else if (fmt === "csv"){
+      const csvBody = "value\n" + items.map(v => `"${String(v).replace(/"/g,'""')}"`).join("\n");
+      downloadBlob(`${base}.csv`, csvBody, "text/csv");
+    } else downloadBlob(`${base}.json`, JSON.stringify(items, null, 2), "application/json");
+  });
+
+  return { setItems, getItems: () => items, listEl: list, colEl: col };
 }
 
-async function startJob() {
-  if (running) return;
-  if (queue.length === 0) { toast('Add files or a folder first.'); return; }
-  const password = $('pwField').value;
-  if (!password) { toast('Enter a password (or import a key file) first.'); return; }
-  const isEncrypt = mode === 'encrypt';
-  if (isEncrypt) {
-    if (password !== $('pwConfirm').value) { toast('Passwords do not match.', true); return; }
-    const { score } = passwordStrength(password);
-    if (score < 30 && !confirm('This password is weak. Continue anyway?')) return;
+/* ============================================================
+   PAGE: Numbers
+   ============================================================ */
+registerPage("numbers", "🔢", "Numbers", "Core Generators", (container) => {
+  pageHeader(container, "Numbers", "Generate random integers, floats, or dice rolls.");
+  const body = pageBody(container);
+  const card = controlsCard(body);
+
+  const mode = makeSelect(["Integer","Float","Dice roll (NdM)"]);
+  card.appendChild(fieldRow("Type", mode));
+
+  const minInput = makeNumber(-1e9, 1e9, 1, 1);
+  card.appendChild(fieldRow("Min", minInput));
+  const maxInput = makeNumber(-1e9, 1e9, 100, 1);
+  card.appendChild(fieldRow("Max", maxInput));
+  const decimals = makeNumber(0, 10, 2, 1);
+  card.appendChild(fieldRow("Decimals", decimals));
+  const diceN = makeNumber(1, 100, 2, 1);
+  card.appendChild(fieldRow("Dice count", diceN));
+  const diceSides = makeNumber(2, 1000, 6, 1);
+  card.appendChild(fieldRow("Dice sides", diceSides));
+  const count = makeNumber(1, 100000, 10, 1);
+  card.appendChild(fieldRow("How many", count));
+
+  const uniqueF = checkField("Unique values only"); card.appendChild(uniqueF.wrap);
+  const sortF = checkField("Sort ascending"); card.appendChild(sortF.wrap);
+  const secureF = checkField("Cryptographically secure", true); card.appendChild(secureF.wrap);
+  const statsHint = el("div", {class:"hint"}, "");
+  card.appendChild(statsHint);
+
+  function syncMode(){
+    const m = mode.value;
+    const isDice = m.startsWith("Dice");
+    const isFloat = m === "Float";
+    [decimals].forEach(w => w.closest ? null : null);
+    decimals.disabled = !isFloat;
+    diceN.disabled = !isDice; diceSides.disabled = !isDice;
+    minInput.disabled = isDice; maxInput.disabled = isDice;
+    uniqueF.input.disabled = isDice;
+    minInput.step = isFloat ? "any" : "1";
+    maxInput.step = isFloat ? "any" : "1";
+    if (!isFloat){ minInput.value = Math.round(+minInput.value || 0); maxInput.value = Math.round(+maxInput.value || 0); }
   }
+  [minInput, maxInput].forEach(inp => inp.addEventListener("input", () => {
+    if (mode.value !== "Float") inp.value = inp.value.replace(/[^\d-]/g, "");
+  }));
+  mode.addEventListener("change", syncMode);
+  syncMode();
 
-  running = true;
-  $('startBtn').disabled = true;
-  $('log').textContent = '';
-  setOverall(0);
-
-  let success = 0, fail = 0;
-  for (let i = 0; i < queue.length; i++) {
-    const item = queue[i];
-    try {
-      await processQueueItem(item, isEncrypt, password);
-      success++;
-    } catch (e) {
-      fail++;
-      log(`✘ ${item.name}: ${e.message}`);
-    }
-    setOverall((i + 1) / queue.length);
-  }
-
-  setPhase('Done');
-  setItemProgress(1);
-  const msg = `Finished: ${success} succeeded${fail ? `, ${fail} failed` : ''}`;
-  log(msg);
-  toast(msg, fail > 0);
-
-  $('pwField').value = '';
-  $('pwConfirm').value = '';
-  onPasswordChanged();
-  running = false;
-  $('startBtn').disabled = false;
-}
-
-/* ---------- preview / verify ---------- */
-function selectedItem() {
-  const found = queue.find(i => i.id === selectedId);
-  if (found) return found;
-  return queue.length === 1 ? queue[0] : null; // safety net: only one possible target anyway
-}
-
-async function previewSelected() {
-  const item = selectedItem();
-  if (!item) { toast('Select an item in the queue first.'); return; }
-  if (!(item.kind === 'file' && item.name.toLowerCase().endsWith(ENC_EXT))) {
-    toast(`"${item.name}" isn't a ${ENC_EXT} file, so it can't be previewed.`); return;
-  }
-  const password = await promptPassword(item.name);
-  if (!password) return;
-  try {
-    setPhase(`Decrypting "${item.name}" for preview…`);
-    const vaultBytes = new Uint8Array(await item.file.arrayBuffer());
-    if (vaultBytes.length > PREVIEW_LIMIT) {
-      toast(`"${item.name}" is too large to preview in-browser. Use Decrypt to export it instead.`, true);
-      setPhase('Ready'); return;
-    }
-    const result = await decryptVault(vaultBytes, password, (f) => setItemProgress(f));
-    setPhase('Ready'); setItemProgress(0);
-    showPreview(result);
-  } catch (e) {
-    setPhase('Ready'); setItemProgress(0);
-    toast(e.message, true);
-  }
-}
-
-async function verifySelected() {
-  const item = selectedItem();
-  if (!item) { toast('Select an item in the queue first.'); return; }
-  if (!(item.kind === 'file' && item.name.toLowerCase().endsWith(ENC_EXT))) {
-    toast(`"${item.name}" isn't a ${ENC_EXT} file.`); return;
-  }
-  const password = await promptPassword(item.name);
-  if (!password) return;
-  try {
-    setPhase(`Verifying "${item.name}"…`);
-    const vaultBytes = new Uint8Array(await item.file.arrayBuffer());
-    const result = await decryptVault(vaultBytes, password, (f) => setItemProgress(f));
-    setPhase('Ready'); setItemProgress(0);
-    const kind = result.isFolder ? 'folder' : 'file';
-    const displayName = result.isFolder ? result.name.replace(/\.zip$/i, '') : result.name;
-    alert(`Original name: ${displayName}\nType: ${kind}\nDecrypted size: ${humanSize(result.data.length)}\n\n✓ Integrity verified — content is intact and untampered.`);
-  } catch (e) {
-    setPhase('Ready'); setItemProgress(0);
-    alert(`Verification failed:\n${e.message}`);
-  }
-}
-
-function promptPassword(itemName) {
-  const existing = $('pwField').value;
-  if (existing) return Promise.resolve(existing);
-  const pw = prompt(`Enter password for "${itemName}":`);
-  return Promise.resolve(pw || null);
-}
-
-function showPreview(result) {
-  const displayName = result.isFolder ? result.name.replace(/\.zip$/i, '') : result.name;
-  $('previewTitle').textContent = (result.isFolder ? '📁 ' : '📄 ') + displayName;
-  $('previewBadge').innerHTML = result.verified
-    ? '<span class="badge-ok">✓ Integrity verified</span>'
-    : '<span class="badge-bad">⚠ Integrity check FAILED</span>';
-  const body = $('previewBody');
-  body.innerHTML = '';
-  const saveBtn = $('previewSaveBtn');
-
-  if (result.isFolder) {
-    JSZip.loadAsync(result.data).then((zip) => {
-      const names = Object.keys(zip.files).filter(n => !zip.files[n].dir).sort();
-      const list = document.createElement('div');
-      list.className = 'zip-entry-list';
-      const pre = document.createElement('pre');
-      pre.textContent = 'Double-click a file above to preview it here';
-      for (const n of names) {
-        const row = document.createElement('div');
-        row.textContent = n;
-        row.addEventListener('click', async () => {
-          const entryBytes = new Uint8Array(await zip.files[n].async('uint8array'));
-          renderInline(pre, n, entryBytes);
-        });
-        list.appendChild(row);
+  const results = resultsColumn(body, {filenameBase:"numbers"});
+  card.appendChild(primaryButton("Generate", () => {
+    const secure = secureF.input.checked;
+    const n = +count.value;
+    const pick = (a,b) => secure ? ri(a,b) : rint(a,b);
+    if (mode.value.startsWith("Dice")){
+      const sides = +diceSides.value, dice = +diceN.value;
+      const items = [];
+      for (let i=0;i<n;i++){
+        const rolls = Array.from({length:dice}, () => pick(1,sides));
+        items.push(`${rolls.reduce((a,b)=>a+b,0)}  (${rolls.join(" + ")})`);
       }
-      body.appendChild(list);
-      body.appendChild(pre);
-      saveBtn.onclick = () => {
-        const blob = result.data;
-        downloadBytes(blob, result.name);
-      };
-      saveBtn.textContent = '💾 Export Folder (.zip)';
+      statsHint.textContent = `Rolling ${dice}d${sides} × ${n}`;
+      results.setItems(items, "Numbers"); return;
+    }
+    let a = +minInput.value, b = +maxInput.value;
+    if (a > b) [a,b] = [b,a];
+    let values = [];
+    if (mode.value === "Integer"){
+      a = Math.round(a); b = Math.round(b);
+      if (uniqueF.input.checked){
+        const span = b - a + 1;
+        if (n > span){ toast(`Can't pick ${n} unique ints from a range of ${span}.`); return; }
+        const pool = shuffle(Array.from({length:span}, (_,i) => a+i));
+        values = pool.slice(0, n);
+      } else {
+        values = Array.from({length:n}, () => pick(a,b));
+      }
+    } else {
+      const dec = +decimals.value;
+      values = Array.from({length:n}, () => {
+        const v = secure ? (a + (crypto.getRandomValues(new Uint32Array(1))[0]/0xFFFFFFFF)*(b-a)) : (a + RNG.next()*(b-a));
+        return +v.toFixed(dec);
+      });
+    }
+    if (sortF.input.checked) values.sort((x,y)=>x-y);
+    if (values.length){
+      const sum = values.reduce((s,v)=>s+v,0);
+      statsHint.textContent = `min ${Math.min(...values)} · max ${Math.max(...values)} · avg ${(sum/values.length).toFixed(3)} · sum ${sum}`;
+    }
+    results.setItems(values.map(String), "Numbers");
+  }));
+});
+
+/* ============================================================
+   PAGE: Strings
+   ============================================================ */
+registerPage("strings", "🔠", "Strings", "Core Generators", (container) => {
+  pageHeader(container, "Strings", "Generate random text strings with a custom character set.");
+  const body = pageBody(container);
+  const card = controlsCard(body);
+
+  const length = makeNumber(1,10000,16,1); card.appendChild(fieldRow("Length", length));
+  const count = makeNumber(1,10000,10,1); card.appendChild(fieldRow("How many", count));
+  const lowerF = checkField("Lowercase a-z", true); card.appendChild(lowerF.wrap);
+  const upperF = checkField("Uppercase A-Z", true); card.appendChild(upperF.wrap);
+  const digitsF = checkField("Digits 0-9", true); card.appendChild(digitsF.wrap);
+  const symbolsF = checkField("Symbols !@#$..."); card.appendChild(symbolsF.wrap);
+  const ambF = checkField("Exclude ambiguous (Il1O0)"); card.appendChild(ambF.wrap);
+  const custom = makeText("extra custom characters (optional)"); card.appendChild(fieldRow("Custom", custom));
+  const uniqueF = checkField("Unique strings only"); card.appendChild(uniqueF.wrap);
+  const secureF = checkField("Cryptographically secure", true); card.appendChild(secureF.wrap);
+
+  const AMBIGUOUS = "Il1O0|`'\",.;:";
+  function buildCharset(){
+    let s = "";
+    if (lowerF.input.checked) s += "abcdefghijklmnopqrstuvwxyz";
+    if (upperF.input.checked) s += "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    if (digitsF.input.checked) s += "0123456789";
+    if (symbolsF.input.checked) s += "!@#$%^&*()-_=+[]{};:,.<>?/~";
+    s += custom.value || "";
+    if (ambF.input.checked) s = [...s].filter(c => !AMBIGUOUS.includes(c)).join("");
+    return [...new Set(s)].join("");
+  }
+
+  const results = resultsColumn(body, {filenameBase:"strings"});
+  card.appendChild(primaryButton("Generate", () => {
+    const charset = buildCharset();
+    if (!charset){ toast("Enable at least one character set."); return; }
+    const secure = secureF.input.checked;
+    const pickChar = () => charset[secure ? ri(0,charset.length-1) : rint(0,charset.length-1)];
+    const len = +length.value, n = +count.value;
+    const seen = uniqueF.input.checked ? new Set() : null;
+    const items = [];
+    let attempts = 0, maxAttempts = n*50+1000;
+    while (items.length < n){
+      attempts++;
+      if (attempts > maxAttempts){ toast("Can't satisfy uniqueness with this length/charset."); break; }
+      let s = ""; for (let i=0;i<len;i++) s += pickChar();
+      if (seen){ if (seen.has(s)) continue; seen.add(s); }
+      items.push(s);
+    }
+    results.setItems(items, "Strings");
+  }));
+});
+
+/* ============================================================
+   PAGE: Passwords
+   ============================================================ */
+registerPage("passwords", "🔐", "Passwords", "Core Generators", (container) => {
+  pageHeader(container, "Passwords", "Generate strong, secure passwords with a live strength meter.");
+  const body = pageBody(container);
+  const card = controlsCard(body);
+
+  const lengthWrap = el("input", {type:"range", min:4, max:128, value:20});
+  const lengthLbl = el("span", {}, "20");
+  lengthWrap.addEventListener("input", () => lengthLbl.textContent = lengthWrap.value);
+  const lenRow = el("div", {style:"display:flex; gap:8px; align-items:center; flex:1;"}, [lengthWrap, lengthLbl]);
+  card.appendChild(fieldRow("Length", lenRow));
+
+  const count = makeNumber(1,1000,5,1); card.appendChild(fieldRow("How many", count));
+  const lowerF = checkField("Lowercase", true); card.appendChild(lowerF.wrap);
+  const upperF = checkField("Uppercase", true); card.appendChild(upperF.wrap);
+  const digitsF = checkField("Digits", true); card.appendChild(digitsF.wrap);
+  const symbolsF = checkField("Symbols", true); card.appendChild(symbolsF.wrap);
+  const ambF = checkField("Exclude ambiguous characters"); card.appendChild(ambF.wrap);
+  const noRepeatF = checkField("No repeated characters"); card.appendChild(noRepeatF.wrap);
+  const pronounceF = checkField("Pronounceable mode (syllables)"); card.appendChild(pronounceF.wrap);
+
+  const strengthBar = el("div", {class:"strength-bar"}, [el("div", {style:"width:0%; background:#666;"})]);
+  card.appendChild(strengthBar);
+  const strengthLbl = el("div", {class:"hint"}, "Preview strength appears after generating.");
+  card.appendChild(strengthLbl);
+
+  const AMBIGUOUS = "Il1O0|`'\",.;:";
+  function charClasses(){
+    const c = [];
+    if (lowerF.input.checked) c.push("abcdefghijklmnopqrstuvwxyz");
+    if (upperF.input.checked) c.push("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+    if (digitsF.input.checked) c.push("0123456789");
+    if (symbolsF.input.checked) c.push("!@#$%^&*()-_=+[]{};:,.<>?/~");
+    return c;
+  }
+  function buildCharset(){
+    let s = charClasses().join("");
+    if (ambF.input.checked) s = [...s].filter(c => !AMBIGUOUS.includes(c)).join("");
+    return s;
+  }
+  function strengthOf(pw){
+    if (!pw) return [0,"empty"];
+    const classes = [/[a-z]/,/[A-Z]/,/[0-9]/,/[^a-zA-Z0-9]/].filter(r => r.test(pw)).length;
+    let pool = 0;
+    if (/[a-z]/.test(pw)) pool += 26;
+    if (/[A-Z]/.test(pw)) pool += 26;
+    if (/[0-9]/.test(pw)) pool += 10;
+    if (/[^a-zA-Z0-9]/.test(pw)) pool += 32;
+    pool = Math.max(pool,1);
+    const entropy = pw.length * Math.log2(pool);
+    let score = Math.min(100, Math.round(entropy/100*100*(classes/4+0.4)));
+    score = Math.max(0, Math.min(100, score));
+    const label = score<30?"Weak":score<55?"Fair":score<78?"Strong":"Excellent";
+    return [score, label];
+  }
+  card.appendChild(primaryButton("Generate", () => {
+    const len = +lengthWrap.value, n = +count.value;
+    const items = [];
+    if (pronounceF.input.checked){
+      for (let i=0;i<n;i++){
+        const vowels="aeiou", cons="bcdfghjklmnpqrstvwxyz";
+        let s=""; let useC=true;
+        while (s.length < len){ s += rc([...(useC?cons:vowels)]); useC=!useC; }
+        s = s.slice(0,len);
+        s = s.charAt(0).toUpperCase()+s.slice(1);
+        items.push(s + String(ri(10,99)));
+      }
+      results.setItems(items, "Passwords");
+      const [score,label] = strengthOf(items[0]);
+      updateStrength(score,label);
+      return;
+    }
+    const charset = buildCharset();
+    if (!charset){ toast("Enable at least one character class."); return; }
+    const required = charClasses().map(cls => ambF.input.checked ? [...cls].filter(c=>!AMBIGUOUS.includes(c)).join("") : cls);
+    const noRepeat = noRepeatF.input.checked;
+    if (noRepeat && len > new Set(charset).size){ toast("Length exceeds available unique characters for 'no repeat'."); return; }
+    for (let i=0;i<n;i++){
+      let pw = "";
+      for (let attempt=0; attempt<200; attempt++){
+        if (noRepeat){
+          pw = shuffle([...new Set(charset)]).slice(0,len).join("");
+        } else {
+          pw = Array.from({length:len}, () => charset[ri(0,charset.length-1)]).join("");
+        }
+        if (required.every(cls => [...pw].some(c => cls.includes(c)))) break;
+      }
+      items.push(pw);
+    }
+    results.setItems(items, "Passwords");
+    if (items.length){ const [score,label] = strengthOf(items[0]); updateStrength(score,label); }
+  }));
+  function updateStrength(score, label){
+    const colors = {Weak:"#ef5b6f",Fair:"#f5b942",Strong:"#3ddc97",Excellent:"#3ddc97",empty:"#666"};
+    strengthBar.firstChild.style.width = score + "%";
+    strengthBar.firstChild.style.background = colors[label] || "#666";
+    strengthLbl.textContent = `First password strength: ${label} (${score}/100)`;
+  }
+  const results = resultsColumn(body, {filenameBase:"passwords"});
+});
+
+/* ============================================================
+   PAGE: UUIDs & IDs
+   ============================================================ */
+registerPage("uuids", "🆔", "UUIDs & IDs", "Core Generators", (container) => {
+  pageHeader(container, "UUIDs & IDs", "Generate UUIDs, short IDs, or hex tokens.");
+  const body = pageBody(container);
+  const card = controlsCard(body);
+
+  const kind = makeSelect(["UUID v4 (random)","UUID v1-style (time-based)","Short ID (8 chars)","Hex token (32 chars)","Nano ID (21 chars)"]);
+  card.appendChild(fieldRow("Type", kind));
+  const upperF = checkField("Uppercase"); card.appendChild(upperF.wrap);
+  const noHyphenF = checkField("Remove hyphens"); card.appendChild(noHyphenF.wrap);
+  const bracesF = checkField("Wrap in { }"); card.appendChild(bracesF.wrap);
+  const count = makeNumber(1,10000,10,1); card.appendChild(fieldRow("How many", count));
+
+  function uuidV4(){ return crypto.randomUUID(); }
+  function uuidV1ish(){
+    const ts = Date.now().toString(16).padStart(12,"0");
+    const rnd = [...crypto.getRandomValues(new Uint8Array(8))].map(b=>b.toString(16).padStart(2,"0")).join("");
+    return `${ts.slice(0,8)}-${ts.slice(8,12)}-1${rnd.slice(0,3)}-${rnd.slice(3,7)}-${rnd.slice(7,15).padEnd(12,"0").slice(0,12)}`;
+  }
+  const NANO_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-";
+
+  const results = resultsColumn(body, {filenameBase:"uuids"});
+  card.appendChild(primaryButton("Generate", () => {
+    const n = +count.value;
+    const items = [];
+    for (let i=0;i<n;i++){
+      let s;
+      if (kind.value.startsWith("UUID v4")) s = uuidV4();
+      else if (kind.value.startsWith("UUID v1")) s = uuidV1ish();
+      else if (kind.value.startsWith("Short")) s = Array.from({length:8}, () => rc([..."abcdefghijklmnopqrstuvwxyz0123456789"])).join("");
+      else if (kind.value.startsWith("Hex")) s = [...crypto.getRandomValues(new Uint8Array(16))].map(b=>b.toString(16).padStart(2,"0")).join("");
+      else s = Array.from({length:21}, () => rc([...NANO_ALPHABET])).join("");
+      if (noHyphenF.input.checked) s = s.replace(/-/g,"");
+      if (upperF.input.checked) s = s.toUpperCase();
+      if (bracesF.input.checked) s = "{" + s + "}";
+      items.push(s);
+    }
+    results.setItems(items, "UUIDs & IDs");
+  }));
+});
+
+/* ============================================================
+   PAGE: Colors
+   ============================================================ */
+registerPage("colors", "🎨", "Colors", "Core Generators", (container) => {
+  pageHeader(container, "Colors", "Generate random colors with a live swatch preview.");
+  const body = pageBody(container);
+  const card = controlsCard(body);
+
+  const styleSel = makeSelect(["Any","Pastel","Vivid","Dark","Grayscale"]);
+  card.appendChild(fieldRow("Style", styleSel));
+  const fmtSel = makeSelect(["HEX","RGB","RGBA","HSL"]);
+  card.appendChild(fieldRow("Format", fmtSel));
+  const count = makeNumber(1,200,12,1); card.appendChild(fieldRow("How many", count));
+
+  const results = resultsColumn(body, {filenameBase:"colors"});
+  const swatchGrid = el("div", {class:"swatch-grid"});
+  results.colEl.appendChild(swatchGrid);
+
+  function hslToRgb(h,s,l){
+    s/=100; l/=100;
+    const k = n => (n + h/30) % 12;
+    const a = s * Math.min(l, 1-l);
+    const f = n => l - a*Math.max(-1, Math.min(k(n)-3, Math.min(9-k(n),1)));
+    return [Math.round(f(0)*255), Math.round(f(8)*255), Math.round(f(4)*255)];
+  }
+  function randColor(style){
+    let h,s,l;
+    if (style==="Pastel"){ h=rf(0,360,1); s=rf(40,70,1); l=rf(75,90,1); }
+    else if (style==="Vivid"){ h=rf(0,360,1); s=rf(75,100,1); l=rf(45,60,1); }
+    else if (style==="Dark"){ h=rf(0,360,1); s=rf(30,80,1); l=rf(12,28,1); }
+    else if (style==="Grayscale"){ const v = ri(0,255); return {r:v,g:v,b:v,h:0,s:0,l:v/255*100}; }
+    else { const [r,g,b] = [ri(0,255),ri(0,255),ri(0,255)]; return {r,g,b,h:0,s:0,l:0}; }
+    const [r,g,b] = hslToRgb(h,s,l);
+    return {r,g,b,h,s,l};
+  }
+  function fmtColor(c, fmt){
+    const hex = "#" + [c.r,c.g,c.b].map(v=>v.toString(16).padStart(2,"0")).join("").toUpperCase();
+    if (fmt==="HEX") return hex;
+    if (fmt==="RGB") return `rgb(${c.r}, ${c.g}, ${c.b})`;
+    if (fmt==="RGBA") return `rgba(${c.r}, ${c.g}, ${c.b}, 1.0)`;
+    const max=Math.max(c.r,c.g,c.b)/255, min=Math.min(c.r,c.g,c.b)/255;
+    const l=(max+min)/2; let h=0,s=0;
+    if (max!==min){
+      const d=max-min; s=l>0.5?d/(2-max-min):d/(max+min);
+      if (max===c.r/255) h=((c.g/255-c.b/255)/d + (c.g<c.b?6:0));
+      else if (max===c.g/255) h=(c.b/255-c.r/255)/d+2;
+      else h=(c.r/255-c.g/255)/d+4;
+      h*=60;
+    }
+    return `hsl(${Math.round(h)}, ${Math.round(s*100)}%, ${Math.round(l*100)}%)`;
+  }
+
+  card.appendChild(primaryButton("Generate", () => {
+    const n = +count.value;
+    const colors = Array.from({length:n}, () => randColor(styleSel.value));
+    const items = colors.map(c => fmtColor(c, fmtSel.value));
+    results.setItems(items, "Colors");
+    swatchGrid.innerHTML = "";
+    colors.forEach((c,i) => {
+      const lum = (0.299*c.r + 0.587*c.g + 0.114*c.b) / 255;
+      const sw = el("div", {class:"swatch", style:`background:rgb(${c.r},${c.g},${c.b}); color:${lum>0.55?"#111":"#fff"};`}, items[i]);
+      sw.addEventListener("click", () => copyText(items[i]));
+      swatchGrid.appendChild(sw);
     });
-  } else {
-    renderInline(body, result.name, result.data);
-    saveBtn.textContent = '💾 Save As…';
-    saveBtn.onclick = () => downloadBytes(result.data, result.name);
+  }));
+});
+
+/* ============================================================
+   PAGE: Names & Identities
+   ============================================================ */
+registerPage("names", "👤", "Names & Identities", "Content", (container) => {
+  pageHeader(container, "Names & Identities", "Generate placeholder names, emails, and usernames.");
+  const body = pageBody(container);
+  const card = controlsCard(body);
+
+  const kind = makeSelect(["Full name","Username","Email address","Full identity (name + email + username)"]);
+  card.appendChild(fieldRow("Type", kind));
+  const middleF = checkField("Include middle initial"); card.appendChild(middleF.wrap);
+  const count = makeNumber(1,5000,10,1); card.appendChild(fieldRow("How many", count));
+
+  const results = resultsColumn(body, {filenameBase:"names"});
+  card.appendChild(primaryButton("Generate", () => {
+    const n = +count.value;
+    const items = [];
+    for (let i=0;i<n;i++){
+      const first = rc(FIRST_NAMES), last = rc(LAST_NAMES);
+      const mid = middleF.input.checked ? rc([..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"]) + "." : "";
+      const full = `${first}${mid?" "+mid:""} ${last}`;
+      const username = `${first.toLowerCase()}${ri(0,1)?".":"_"}${last.toLowerCase()}${ri(0,98)}`;
+      const email = `${first.toLowerCase()}.${last.toLowerCase()}${ri(0,998)}@${rc(DOMAINS)}`;
+      if (kind.value === "Full name") items.push(full);
+      else if (kind.value === "Username") items.push(username);
+      else if (kind.value === "Email address") items.push(email);
+      else items.push(`${full}  |  ${username}  |  ${email}`);
+    }
+    results.setItems(items, "Names & Identities");
+  }));
+});
+
+/* ============================================================
+   PAGE: Dates & Times
+   ============================================================ */
+registerPage("dates", "📅", "Dates & Times", "Content", (container) => {
+  pageHeader(container, "Dates & Times", "Generate random dates or timestamps within a range.");
+  const body = pageBody(container);
+  const card = controlsCard(body);
+
+  const today = new Date();
+  const twoYrsAgo = new Date(); twoYrsAgo.setFullYear(today.getFullYear()-2);
+  const startInput = el("input", {type:"date", value: twoYrsAgo.toISOString().slice(0,10)});
+  card.appendChild(fieldRow("Start", startInput));
+  const endInput = el("input", {type:"date", value: today.toISOString().slice(0,10)});
+  card.appendChild(fieldRow("End", endInput));
+  const timeF = checkField("Include random time of day"); card.appendChild(timeF.wrap);
+  const fmtSel = makeSelect(["YYYY-MM-DD","MM/DD/YYYY","DD/MM/YYYY","Month D, YYYY","ISO 8601","Unix timestamp"]);
+  card.appendChild(fieldRow("Format", fmtSel));
+  const count = makeNumber(1,10000,10,1); card.appendChild(fieldRow("How many", count));
+  const sortF = checkField("Sort chronologically"); card.appendChild(sortF.wrap);
+
+  const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  function fmtDate(d, fmt, hasTime){
+    const pad = n => String(n).padStart(2,"0");
+    if (fmt==="Unix timestamp") return String(Math.floor(d.getTime()/1000));
+    if (fmt==="ISO 8601") return d.toISOString();
+    let s;
+    if (fmt==="YYYY-MM-DD") s = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    else if (fmt==="MM/DD/YYYY") s = `${pad(d.getMonth()+1)}/${pad(d.getDate())}/${d.getFullYear()}`;
+    else if (fmt==="DD/MM/YYYY") s = `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`;
+    else s = `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+    if (hasTime) s += ` ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    return s;
   }
-  $('previewBackdrop').classList.add('open');
+
+  const results = resultsColumn(body, {filenameBase:"dates"});
+  card.appendChild(primaryButton("Generate", () => {
+    let d0 = new Date(startInput.value), d1 = new Date(endInput.value);
+    if (d0 > d1) [d0,d1] = [d1,d0];
+    const spanMs = d1.getTime() - d0.getTime();
+    const n = +count.value, hasTime = timeF.input.checked;
+    let dates = [];
+    for (let i=0;i<n;i++){
+      const offsetDays = ri(0, Math.round(spanMs/86400000));
+      const d = new Date(d0.getTime() + offsetDays*86400000);
+      if (hasTime){ d.setHours(ri(0,23), ri(0,59), ri(0,59)); } else d.setHours(0,0,0,0);
+      dates.push(d);
+    }
+    if (sortF.input.checked) dates.sort((a,b)=>a-b);
+    results.setItems(dates.map(d => fmtDate(d, fmtSel.value, hasTime)), "Dates & Times");
+  }));
+});
+
+/* ============================================================
+   PAGE: Lorem Ipsum
+   ============================================================ */
+registerPage("lorem", "📄", "Lorem Ipsum", "Content", (container) => {
+  pageHeader(container, "Lorem Ipsum", "Generate placeholder text for mockups and testing.");
+  const body = pageBody(container);
+  const card = controlsCard(body);
+
+  const unitSel = makeSelect(["Words","Sentences","Paragraphs"]);
+  card.appendChild(fieldRow("Unit", unitSel));
+  const count = makeNumber(1,500,3,1); card.appendChild(fieldRow("Amount", count));
+  const classicF = checkField("Start with 'Lorem ipsum dolor sit amet...'", true); card.appendChild(classicF.wrap);
+  const htmlF = checkField("Wrap paragraphs in <p> tags"); card.appendChild(htmlF.wrap);
+
+  function sentence(){
+    const n = ri(6,14);
+    const words = Array.from({length:n}, () => rc(LOREM_WORDS));
+    const s = words.join(" ");
+    return s.charAt(0).toUpperCase() + s.slice(1) + ".";
+  }
+  function paragraph(sentences){ return Array.from({length:sentences}, sentence).join(" "); }
+
+  const results = resultsColumn(body, {filenameBase:"lorem-ipsum"});
+  card.appendChild(primaryButton("Generate", () => {
+    const n = +count.value;
+    let items = [];
+    if (unitSel.value === "Words"){
+      const words = Array.from({length:n}, () => rc(LOREM_WORDS));
+      if (classicF.input.checked && n>=5) ["Lorem","ipsum","dolor","sit","amet"].forEach((w,i)=>words[i]=w);
+      items = [words.join(" ")];
+    } else if (unitSel.value === "Sentences"){
+      for (let i=0;i<n;i++){
+        let s = sentence();
+        if (i===0 && classicF.input.checked) s = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
+        items.push(s);
+      }
+    } else {
+      for (let i=0;i<n;i++){
+        let p = paragraph(ri(4,7));
+        if (i===0 && classicF.input.checked) p = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " + p;
+        if (htmlF.input.checked) p = `<p>${p}</p>`;
+        items.push(p);
+      }
+    }
+    results.setItems(items, "Lorem Ipsum");
+  }));
+});
+
+/* ============================================================
+   PAGE: List Tools
+   ============================================================ */
+registerPage("listtools", "🔀", "List Tools", "Tools", (container) => {
+  pageHeader(container, "List Tools", "Shuffle, pick, or randomize your own list of items.");
+  const body = pageBody(container);
+  const card = controlsCard(body);
+
+  card.appendChild(el("label", {style:"font-size:12.5px; color:var(--text-dim);"}, "Your list"));
+  const inputBox = makeTextarea("Enter one item per line\ne.g.\nAlice\nBob\nCharlie", 7);
+  card.appendChild(inputBox);
+
+  const actionSel = makeSelect(["Shuffle order","Pick N at random (no repeat)","Pick N at random (with repeat)","Coin flip","Roll a die (1-6)"]);
+  card.appendChild(fieldRow("Action", actionSel));
+  const pickN = makeNumber(1,1000,1,1); card.appendChild(fieldRow("N", pickN));
+
+  const results = resultsColumn(body, {filenameBase:"list-tools"});
+  card.appendChild(primaryButton("Generate", () => {
+    const action = actionSel.value;
+    if (action === "Coin flip"){ results.setItems([rc(["Heads","Tails"])], "List Tools"); return; }
+    if (action === "Roll a die (1-6)"){ results.setItems([String(ri(1,6))], "List Tools"); return; }
+    const raw = inputBox.value.split("\n").map(s=>s.trim()).filter(Boolean);
+    if (!raw.length){ toast("Add at least one item, one per line."); return; }
+    const n = +pickN.value;
+    let items;
+    if (action === "Shuffle order") items = shuffle(raw);
+    else if (action.startsWith("Pick N at random (no")){
+      if (n > raw.length){ toast(`You only have ${raw.length} items.`); return; }
+      items = shuffle(raw).slice(0,n);
+    } else items = Array.from({length:n}, () => rc(raw));
+    results.setItems(items, "List Tools");
+  }));
+});
+
+/* ============================================================
+   PAGE: Network
+   ============================================================ */
+registerPage("network", "🌐", "Network", "Content", (container) => {
+  pageHeader(container, "Network", "Generate IP addresses, MAC addresses, and ports.");
+  const body = pageBody(container);
+  const card = controlsCard(body);
+
+  const kind = makeSelect(["IPv4 address","IPv4 (private range)","IPv6 address","MAC address","Port number (1024-65535)"]);
+  card.appendChild(fieldRow("Type", kind));
+  const count = makeNumber(1,5000,10,1); card.appendChild(fieldRow("How many", count));
+
+  const results = resultsColumn(body, {filenameBase:"network"});
+  card.appendChild(primaryButton("Generate", () => {
+    const n = +count.value;
+    const items = [];
+    for (let i=0;i<n;i++){
+      let s;
+      if (kind.value === "IPv4 address") s = Array.from({length:4}, () => ri(0,255)).join(".");
+      else if (kind.value === "IPv4 (private range)"){
+        const which = ri(0,2);
+        if (which===0) s = `10.${ri(0,255)}.${ri(0,255)}.${ri(1,254)}`;
+        else if (which===1) s = `192.168.${ri(0,255)}.${ri(1,254)}`;
+        else s = `172.${ri(16,31)}.${ri(0,255)}.${ri(1,254)}`;
+      }
+      else if (kind.value === "IPv6 address") s = Array.from({length:8}, () => [...crypto.getRandomValues(new Uint8Array(2))].map(b=>b.toString(16).padStart(2,"0")).join("")).join(":");
+      else if (kind.value === "MAC address") s = Array.from({length:6}, () => ri(0,255).toString(16).padStart(2,"0").toUpperCase()).join(":");
+      else s = String(ri(1024,65535));
+      items.push(s);
+    }
+    results.setItems(items, "Network");
+  }));
+});
+
+/* ============================================================
+   PAGE: Words & Slugs
+   ============================================================ */
+registerPage("words", "✨", "Words & Slugs", "Content", (container) => {
+  pageHeader(container, "Words & Slugs", "Random words, project codenames, and URL slugs.");
+  const body = pageBody(container);
+  const card = controlsCard(body);
+
+  const kind = makeSelect(["Single word","Codename (adjective-noun)","Slug (word-word-1234)","Domain-style name"]);
+  card.appendChild(fieldRow("Type", kind));
+  const count = makeNumber(1,2000,10,1); card.appendChild(fieldRow("How many", count));
+
+  const results = resultsColumn(body, {filenameBase:"words"});
+  card.appendChild(primaryButton("Generate", () => {
+    const n = +count.value;
+    const items = [];
+    for (let i=0;i<n;i++){
+      if (kind.value === "Single word") items.push(rc(WORD_BANK));
+      else if (kind.value.startsWith("Codename")) items.push(`${rc(WORD_BANK)[0].toUpperCase()+rc(WORD_BANK).slice(1)} ${rc(WORD_BANK).charAt(0).toUpperCase()+rc(WORD_BANK).slice(1)}`);
+      else if (kind.value.startsWith("Slug")) items.push(`${rc(WORD_BANK)}-${rc(WORD_BANK)}-${ri(1000,9999)}`);
+      else items.push(`${rc(WORD_BANK)}${ri(0,98)}.${rc(TLDS)}`);
+    }
+    results.setItems(items, "Words & Slugs");
+  }));
+});
+
+/* ============================================================
+   PAGE: Dev Tools
+   ============================================================ */
+registerPage("devtools", "🛠", "Dev Tools", "Tools", (container) => {
+  pageHeader(container, "Dev Tools", "Hash, encode, and decode text — handy while coding.");
+  const body = pageBody(container);
+  const card = controlsCard(body);
+
+  card.appendChild(el("label", {style:"font-size:12.5px; color:var(--text-dim);"}, "Input"));
+  const inputBox = makeTextarea("Type or paste text here…", 6);
+  card.appendChild(inputBox);
+
+  const opSel = makeSelect(["MD5 hash","SHA-1 hash","SHA-256 hash","SHA-384 hash","SHA-512 hash",
+    "Base64 encode","Base64 decode","URL encode","URL decode","HTML escape","HTML unescape",
+    "To UPPERCASE","To lowercase","Reverse text","Generate slug (kebab-case)","Random token"]);
+  card.appendChild(fieldRow("Operation", opSel));
+
+  const results = resultsColumn(body, {filenameBase:"dev-tools", hint:"Click the result to copy it."});
+  const runBtn = primaryButton("Run", async () => {
+    const text = inputBox.value;
+    const op = opSel.value;
+    if (!text && op !== "Random token"){ toast("Type something in the input box first."); return; }
+    let out;
+    try{
+      if (op==="MD5 hash") out = md5(text);
+      else if (op==="SHA-1 hash") out = await sha(text,"SHA-1");
+      else if (op==="SHA-256 hash") out = await sha(text,"SHA-256");
+      else if (op==="SHA-384 hash") out = await sha(text,"SHA-384");
+      else if (op==="SHA-512 hash") out = await sha(text,"SHA-512");
+      else if (op==="Base64 encode") out = btoa(unescape(encodeURIComponent(text)));
+      else if (op==="Base64 decode") out = decodeURIComponent(escape(atob(text)));
+      else if (op==="URL encode") out = encodeURIComponent(text);
+      else if (op==="URL decode") out = decodeURIComponent(text);
+      else if (op==="HTML escape") out = text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+      else if (op==="HTML unescape") out = text.replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&#39;/g,"'");
+      else if (op==="To UPPERCASE") out = text.toUpperCase();
+      else if (op==="To lowercase") out = text.toLowerCase();
+      else if (op==="Reverse text") out = [...text].reverse().join("");
+      else if (op==="Generate slug (kebab-case)") out = text.toLowerCase().trim().replace(/[^a-z0-9\s-]/g,"").split(/\s+/).join("-");
+      else { const len = Math.max(8, text.length); out = [...crypto.getRandomValues(new Uint8Array(len))].map(b=>b.toString(36)).join("").slice(0,len); }
+    } catch(e){ toast("Operation failed: " + e.message); return; }
+    results.setItems([out], "Dev Tools");
+  });
+  card.appendChild(runBtn);
+});
+
+/* ============================================================
+   PAGE: Text Scrambler
+   ============================================================ */
+registerPage("scrambler", "🔄", "Text Scrambler", "Tools", (container) => {
+  pageHeader(container, "Text Scrambler", "A Caesar-shift cipher — shifts every letter N places through the alphabet (shift 2: a→c, G→I), wrapping at the ends. Spaces, numbers, and punctuation are left alone.");
+  const body = pageBody(container);
+
+  const left = el("div", {class:"card", style:"padding:18px; flex:1 1 380px; display:flex; flex-direction:column; gap:10px;"});
+  const right = el("div", {class:"card", style:"padding:18px; flex:1 1 380px; display:flex; flex-direction:column; gap:10px;"});
+  body.appendChild(left); body.appendChild(right);
+
+  left.appendChild(el("label", {style:"font-size:12.5px; color:var(--text-dim);"}, "Input text"));
+  const inputBox = makeTextarea("Type or paste text here…", 9);
+  left.appendChild(inputBox);
+
+  const modeSel = makeSelect(["Scramble (encode)","Descramble (decode)"]);
+  left.appendChild(fieldRow("Mode", modeSel));
+  const shiftInput = makeNumber(1,25,2,1);
+  left.appendChild(fieldRow("Shift by", shiftInput));
+
+  const mappingLbl = el("div", {class:"hint", style:"font-family:var(--font-mono); font-size:10.5px; line-height:1.8;"});
+  left.appendChild(mappingLbl);
+
+  const swapBtn = el("button", {class:"ghost"}, "⇆  Swap: send result back to input & flip mode");
+  left.appendChild(swapBtn);
+
+  const rightHead = el("div", {style:"display:flex; align-items:center; gap:8px;"}, [
+    el("h3", {style:"margin:0; font-size:13px;"}, "Result"),
+    el("div", {class:"spacer"}),
+  ]);
+  const copyBtn = el("button", {class:"ghost"}, "Copy");
+  rightHead.appendChild(copyBtn);
+  right.appendChild(rightHead);
+  const output = el("div", {class:"output-box"}, "");
+  right.appendChild(output);
+  right.appendChild(el("div", {class:"hint"}, "Descrambling with the same shift value that was used to scramble recovers the original text exactly."));
+
+  copyBtn.addEventListener("click", () => copyText(output.textContent));
+
+  function update(){
+    const shift = +shiftInput.value;
+    const effective = modeSel.value.startsWith("Scramble") ? shift : -shift;
+    output.textContent = caesarShift(inputBox.value, effective);
+    const pairs = [];
+    for (let i=0;i<26;i++){
+      const a = String.fromCharCode(65+i);
+      const b = String.fromCharCode(65 + (i+shift)%26);
+      pairs.push(`${a}→${b}`);
+    }
+    mappingLbl.textContent = pairs.join("  ");
+  }
+  inputBox.addEventListener("input", update);
+  modeSel.addEventListener("change", update);
+  shiftInput.addEventListener("input", update);
+  swapBtn.addEventListener("click", () => {
+    const result = output.textContent;
+    modeSel.selectedIndex = 1 - modeSel.selectedIndex;
+    inputBox.value = result;
+    update();
+  });
+  update();
+});
+
+/* ============================================================
+   PAGE: Progression Scaler
+   ============================================================ */
+registerPage("progression", "🎮", "Progression Scaler", "Advanced", (container) => {
+  pageHeader(container, "Progression Scaler", "Generate level-up XP tables, crafting cost formulas, or currency curves for quick game-balancing reference. Export as CSV or JSON.");
+  const body = pageBody(container);
+  const card = controlsCard(body);
+
+  const CURVES = ["Linear","Exponential","Polynomial","Fibonacci-based","Logistic (soft cap)"];
+  const PARAMS_BY_CURVE = {
+    "Linear": ["base","increment"], "Exponential": ["base","growth"], "Polynomial": ["base","exponent"],
+    "Fibonacci-based": ["base"], "Logistic (soft cap)": ["cap","midpoint","steepness"],
+  };
+  const ROUND_OPTIONS = [["No rounding (nearest whole number)",1],["Nearest 5",5],["Nearest 10",10],["Nearest 50",50],["Nearest 100",100],["Nearest 1000",1000]];
+
+  const metricInput = makeText("", "XP"); card.appendChild(fieldRow("Metric name", metricInput));
+  const curveSel = makeSelect(CURVES); card.appendChild(fieldRow("Curve type", curveSel));
+
+  const paramRows = {};
+  function addParamRow(key, labelText, input){
+    const row = fieldRow(labelText, input);
+    card.appendChild(row);
+    paramRows[key] = row;
+    return input;
+  }
+  const baseInput = addParamRow("base", "Base value", makeNumber(0,1e9,100,0.01));
+  const incInput = addParamRow("increment", "Increment / level", makeNumber(-1e6,1e6,50,0.01));
+  const growthInput = addParamRow("growth", "Growth rate ×", makeNumber(1.001,10,1.15,0.001));
+  const expInput = addParamRow("exponent", "Exponent", makeNumber(0.1,10,2,0.1));
+  const capInput = addParamRow("cap", "Cap (asymptote)", makeNumber(1,1e9,100000,1));
+  const midInput = addParamRow("midpoint", "Midpoint level", makeNumber(1,10000,25,1));
+  const steepInput = addParamRow("steepness", "Steepness", makeNumber(0.01,5,0.3,0.01));
+
+  function syncParamVisibility(){
+    const active = new Set(PARAMS_BY_CURVE[curveSel.value] || []);
+    for (const [key,row] of Object.entries(paramRows)) row.style.display = active.has(key) ? "flex" : "none";
+  }
+  curveSel.addEventListener("change", syncParamVisibility);
+  syncParamVisibility();
+
+  const startInput = makeNumber(1,100000,1,1); card.appendChild(fieldRow("Start level", startInput));
+  const endInput = makeNumber(1,100000,50,1); card.appendChild(fieldRow("End level", endInput));
+  const roundSel = makeSelect(ROUND_OPTIONS.map(([label]) => label)); card.appendChild(fieldRow("Round to", roundSel));
+  const cumulativeF = checkField("Show cumulative total column", true); card.appendChild(cumulativeF.wrap);
+
+  // ---- right column ----
+  const right = el("div", {class:"results-col"}); body.appendChild(right);
+  const head = el("div", {class:"results-head"}, [
+    el("h3", {}, "Table"),
+  ]);
+  const countLabel = el("span", {class:"stat"}, "");
+  head.appendChild(countLabel);
+  head.appendChild(el("div", {class:"spacer"}));
+  const copyTsvBtn = el("button", {class:"ghost"}, "Copy as TSV");
+  const csvBtn = el("button", {class:"ghost"}, "Export CSV");
+  const jsonBtn = el("button", {class:"ghost"}, "Export JSON");
+  head.append(copyTsvBtn, csvBtn, jsonBtn);
+  right.appendChild(head);
+
+  const tableWrap = el("div", {class:"table-wrap"});
+  const table = el("table", {class:"data-table"});
+  tableWrap.appendChild(table);
+  right.appendChild(tableWrap);
+  right.appendChild(el("div", {}, [el("div", {class:"hint", style:"margin:10px 0 4px;"}, "Curve preview")]));
+  const canvas = el("canvas", {class:"curve-canvas"});
+  right.appendChild(canvas);
+
+  let state = { levels:[], values:[], cumulative:[], metric:"XP" };
+
+  function rawValue(curve, level, start){
+    const base = +baseInput.value;
+    if (curve==="Linear") return base + (level-start) * (+incInput.value);
+    if (curve==="Exponential") return base * Math.pow(+growthInput.value, level-start);
+    if (curve==="Polynomial") return base * Math.pow(level, +expInput.value);
+    if (curve==="Fibonacci-based") return base * fibSeq(level-start+1);
+    if (curve.startsWith("Logistic")){
+      const cap = +capInput.value, mid = +midInput.value, k = +steepInput.value;
+      return cap / (1 + Math.exp(-k*(level-mid)));
+    }
+    return 0;
+  }
+  function applyRound(v, granularity){
+    if (granularity <= 1) return Math.round(v);
+    return Math.round(v/granularity) * granularity;
+  }
+
+  function drawChart(values){
+    const ctx = canvas.getContext("2d");
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    const w = rect.width, h = rect.height, pad = 8;
+    ctx.clearRect(0,0,w,h);
+    if (values.length < 2) return;
+    const vmin = Math.min(...values), vmax0 = Math.max(...values);
+    const vmax = vmax0 === vmin ? vmin+1 : vmax0;
+    const stepX = (w - pad*2) / (values.length-1);
+    const pts = values.map((v,i) => [pad+i*stepX, pad + (h-pad*2) - (v-vmin)/(vmax-vmin)*(h-pad*2)]);
+    ctx.beginPath(); ctx.moveTo(pts[0][0], h-pad);
+    pts.forEach(p => ctx.lineTo(p[0],p[1]));
+    ctx.lineTo(pts[pts.length-1][0], h-pad); ctx.closePath();
+    ctx.fillStyle = "rgba(124,108,246,0.18)"; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(pts[0][0],pts[0][1]);
+    pts.forEach(p => ctx.lineTo(p[0],p[1]));
+    ctx.strokeStyle = "#7c6cf6"; ctx.lineWidth = 2.2; ctx.stroke();
+  }
+
+  function populateTable(){
+    const showCum = cumulativeF.input.checked;
+    table.innerHTML = "";
+    const thead = el("thead", {}, [el("tr", {}, [
+      el("th", {}, "Level"), el("th", {}, state.metric),
+      ...(showCum ? [el("th", {}, `Cumulative ${state.metric}`)] : [])
+    ])]);
+    table.appendChild(thead);
+    const tbody = el("tbody");
+    state.levels.forEach((lvl,i) => {
+      tbody.appendChild(el("tr", {}, [
+        el("td", {}, String(lvl)), el("td", {}, String(state.values[i])),
+        ...(showCum ? [el("td", {}, String(state.cumulative[i]))] : [])
+      ]));
+    });
+    table.appendChild(tbody);
+  }
+
+  function generate(){
+    const start = +startInput.value, end = +endInput.value;
+    if (end < start){ toast("End level must be ≥ start level."); return; }
+    if (end - start > 20000){ toast("That's a very large level range — keep it under 20,000 rows."); return; }
+    const curve = curveSel.value;
+    const metric = metricInput.value.trim() || "XP";
+    const granularity = ROUND_OPTIONS[roundSel.selectedIndex][1];
+    const levels = []; for (let l=start; l<=end; l++) levels.push(l);
+    const values = levels.map(l => applyRound(rawValue(curve,l,start), granularity));
+    const cumulative = []; let total=0;
+    values.forEach(v => { total+=v; cumulative.push(total); });
+    state = {levels, values, cumulative, metric};
+    populateTable();
+    drawChart(values);
+    countLabel.textContent = `${levels.length} level(s)`;
+    logHistory("Progression Scaler", [`${metric} curve: ${curve}, levels ${start}-${end}`]);
+  }
+  card.appendChild(primaryButton("Generate Table", generate));
+
+  function rowsForExport(){
+    const showCum = cumulativeF.input.checked;
+    const header = ["Level", state.metric].concat(showCum ? [`Cumulative ${state.metric}`] : []);
+    const rows = state.levels.map((lvl,i) => [lvl, state.values[i]].concat(showCum ? [state.cumulative[i]] : []));
+    return {header, rows};
+  }
+  copyTsvBtn.addEventListener("click", () => {
+    if (!state.levels.length){ toast("Generate a table first."); return; }
+    const {header, rows} = rowsForExport();
+    copyText([header.join("\t")].concat(rows.map(r=>r.join("\t"))).join("\n"));
+  });
+  csvBtn.addEventListener("click", () => {
+    if (!state.levels.length){ toast("Generate a table first."); return; }
+    const {header, rows} = rowsForExport();
+    const csvBody = [header.join(",")].concat(rows.map(r=>r.join(","))).join("\n");
+    downloadBlob(`${state.metric.toLowerCase().replace(/\s+/g,"_")}_curve.csv`, csvBody, "text/csv");
+  });
+  jsonBtn.addEventListener("click", () => {
+    if (!state.levels.length){ toast("Generate a table first."); return; }
+    const showCum = cumulativeF.input.checked;
+    const payload = {
+      metric: state.metric, curve_type: curveSel.value, start_level: +startInput.value, end_level: +endInput.value,
+      rounding: ROUND_OPTIONS[roundSel.selectedIndex][0],
+      levels: state.levels.map((lvl,i) => Object.assign({level:lvl, value:state.values[i]}, showCum ? {cumulative: state.cumulative[i]} : {})),
+    };
+    downloadBlob(`${state.metric.toLowerCase().replace(/\s+/g,"_")}_curve.json`, JSON.stringify(payload,null,2), "application/json");
+  });
+
+  window.addEventListener("resize", () => { if (state.values.length) drawChart(state.values); });
+});
+
+/* ============================================================
+   PAGE: Fake Profiles
+   ============================================================ */
+registerPage("profiles", "💳", "Fake Profiles", "Advanced", (container) => {
+  pageHeader(container, "Fake Profiles", "Toggle the fields you want, then generate synthetic mock profiles for demos, mockups, or video B-roll.");
+  const body = pageBody(container);
+  const card = controlsCard(body);
+
+  const localeSel = makeSelect(Object.entries(LOCALE_DATA).map(([code,d]) => [code, d.label]));
+  card.appendChild(fieldRow("Locale", localeSel));
+  const count = makeNumber(1,2000,10,1); card.appendChild(fieldRow("How many", count));
+
+  const minAge = makeNumber(0,120,18,1), maxAge = makeNumber(0,120,85,1);
+  minAge.style.flex = "1 1 0"; minAge.style.minWidth = "0";
+  maxAge.style.flex = "1 1 0"; maxAge.style.minWidth = "0";
+  const ageRow = el("div", {class:"field-row"}, [
+    el("label", {}, "Age range"),
+    el("div", {style:"display:flex; align-items:center; gap:8px; flex:1; min-width:0;"}, [
+      minAge, el("span", {style:"flex:none; color:var(--text-dim); font-size:12.5px;"}, "to"), maxAge,
+    ]),
+  ]);
+  card.appendChild(ageRow);
+  card.appendChild(el("div", {class:"hint"}, "Only affects the “Age / Date of Birth” field."));
+
+  const seedInput = makeText("optional — for repeatable results");
+  card.appendChild(fieldRow("Seed", seedInput));
+
+  const selRow = el("div", {class:"btn-row"});
+  const selAllBtn = el("button", {class:"ghost"}, "Select All");
+  const selNoneBtn = el("button", {class:"ghost"}, "Select None");
+  selRow.append(selAllBtn, selNoneBtn);
+  card.appendChild(selRow);
+
+  const FIELD_DEFS = [
+    ["name","Full Name","Personal",true], ["age_dob","Age / Date of Birth","Personal",true],
+    ["occupation","Occupation","Personal",true], ["employer","Employer / Company","Personal",false],
+    ["ssn","SSN","Personal",false],
+    ["email","Email","Contact",true], ["phone","Phone Number","Contact",true], ["address","Address","Contact",true],
+    ["card","Credit / Debit Card","Financial (synthetic)",false], ["bank","Bank Account / IBAN","Financial (synthetic)",false],
+    ["credit_score","Credit Score","Financial (synthetic)",false],
+    ["username","Username","Online",false], ["password","Sample Password","Online",false],
+    ["website","Website","Online",false], ["ip","IP Address","Online",false], ["user_agent","User Agent","Online",false],
+    ["height_weight","Height & Weight","Other",false], ["blood_type","Blood Type","Other",false], ["vehicle","Vehicle","Other",false],
+  ];
+  const checks = {};
+  const scrollWrap = el("div", {class:"checkbox-scroll"});
+  let curGroup = null, groupBox = null;
+  FIELD_DEFS.forEach(([key,label,group,def]) => {
+    if (group !== curGroup){
+      groupBox = el("div", {class:"field-group"}, [el("div", {class:"field-group-title"}, group)]);
+      scrollWrap.appendChild(groupBox);
+      curGroup = group;
+    }
+    const f = checkField(label, def);
+    checks[key] = f.input;
+    groupBox.appendChild(f.wrap);
+  });
+  card.appendChild(scrollWrap);
+  selAllBtn.addEventListener("click", () => Object.values(checks).forEach(c => c.checked = true));
+  selNoneBtn.addEventListener("click", () => Object.values(checks).forEach(c => c.checked = false));
+
+  // ---- right: output ----
+  const right = el("div", {class:"results-col"}); body.appendChild(right);
+  const head = el("div", {class:"results-head"}, [el("h3", {}, "Preview")]);
+  const countLbl = el("span", {class:"stat"}, ""); head.appendChild(countLbl);
+  head.appendChild(el("div", {class:"spacer"}));
+  const copyAllBtn = el("button", {class:"ghost"}, "Copy All");
+  const fmtSel = makeSelect([["txt","TXT"],["csv","CSV"],["json","JSON"]]); fmtSel.style.width="auto";
+  const exportBtn = el("button", {class:"ghost"}, "Export");
+  const clearBtn = el("button", {class:"ghost"}, "Clear");
+  head.append(copyAllBtn, fmtSel, exportBtn, clearBtn);
+  right.appendChild(head);
+  const output = el("div", {class:"output-box"}, "");
+  right.appendChild(output);
+  right.appendChild(el("div", {class:"hint"}, "⚠️ All data is synthetically generated and not linked to any real person, account, or number. For mockups, demos, and testing only."));
+
+  let profiles = [];
+
+  function synthIban(){ return rc(["GB","DE","FR","NL"]) + ri(10,99) + Array.from({length:4},()=>rc([..."ABCDEFGHJKLMNPQRSTUVWXYZ"])).join("") + String(ri(10000000,99999999)) + String(ri(1000,9999)); }
+  function synthSwift(){ return Array.from({length:4},()=>rc([..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"])).join("") + rc(["GB","US","DE","FR","JP"]) + Array.from({length:2},()=>rc([..."ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"])).join(""); }
+  const UAS = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 Version/17.4 Safari/605.1.15",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124.0 Safari/537.36",
+    "Mozilla/5.0 (Android 14; Mobile) AppleWebKit/537.36 Chrome/124.0 Mobile Safari/537.36",
+  ];
+
+  function buildProfile(loc, selected, ageMin, ageMax){
+    const p = {};
+    const first = rc(loc.first), last = rc(loc.last);
+    if (selected.has("name")) p["Name"] = `${first} ${last}`;
+    if (selected.has("age_dob")){
+      const age = ri(ageMin, ageMax);
+      const now = new Date();
+      const dob = new Date(now.getFullYear()-age, ri(0,11), ri(1,28));
+      p["Date of Birth"] = dob.toISOString().slice(0,10);
+      p["Age"] = String(age);
+    }
+    if (selected.has("occupation")) p["Occupation"] = rc(JOBS);
+    if (selected.has("employer")) p["Employer"] = `${rc(loc.last)}, ${rc(loc.last)} and ${rc(loc.last)}`;
+    if (selected.has("ssn")) p["SSN (synthetic)"] = loc.ssnFmt();
+    if (selected.has("email")) p["Email"] = `${first.toLowerCase()}.${last.toLowerCase()}${ri(0,998)}@${rc(DOMAINS)}`;
+    if (selected.has("phone")) p["Phone"] = loc.phone();
+    if (selected.has("address")){
+      const [city,state] = rc(loc.cities);
+      const streetNum = ri(100,9999);
+      p["Address"] = `${streetNum} ${rc(STREET_NAMES)} ${rc(STREET_TYPES)}, ${city}${state?", "+state:""} ${ri(10000,99999)}, ${loc.country}`;
+    }
+    if (selected.has("card")){
+      const brand = rc(["Visa","Mastercard","American Express","Discover"]);
+      const num = fakeCardNumber(brand);
+      const expY = new Date().getFullYear() + ri(1,5);
+      const exp = `${String(ri(1,12)).padStart(2,"0")}/${String(expY).slice(2)}`;
+      const cvv = brand==="American Express" ? String(ri(1000,9999)) : String(ri(100,999));
+      p["Card (synthetic)"] = `${brand} ${num} • Exp ${exp} • CVV ${cvv}`;
+    }
+    if (selected.has("bank")){
+      const acct = String(ri(100000000,999999999));
+      const routing = String(ri(100000000,999999999)).slice(0,9);
+      p["Bank (synthetic)"] = `Acct ${acct} • Routing ${routing} • IBAN ${synthIban()} • SWIFT ${synthSwift()}`;
+    }
+    if (selected.has("credit_score")) p["Credit Score (synthetic)"] = String(ri(300,850));
+    if (selected.has("username")) p["Username"] = `${first.toLowerCase()}${last.toLowerCase()}${ri(0,98)}`;
+    if (selected.has("password")) p["Sample Password"] = Array.from({length:14}, () => rc([..."abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"])).join("");
+    if (selected.has("website")) p["Website"] = `http://www.${last.toLowerCase()}${rc(WORD_BANK)}.${rc(TLDS)}/`;
+    if (selected.has("ip")) p["IP Address"] = Array.from({length:4}, () => ri(1,254)).join(".");
+    if (selected.has("user_agent")) p["User Agent"] = rc(UAS);
+    if (selected.has("height_weight")) p["Height / Weight"] = `${ri(150,200)} cm / ${ri(45,110)} kg`;
+    if (selected.has("blood_type")) p["Blood Type"] = rc(["A+","A-","B+","B-","AB+","AB-","O+","O-"]);
+    if (selected.has("vehicle")) p["Vehicle"] = `${rc(VEHICLE_MAKES)} • Plate ${rc([..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"])}${rc([..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"])}${rc([..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"])}-${ri(1000,9999)}`;
+    return p;
+  }
+
+  function render(){
+    const blocks = profiles.map((p,i) => {
+      const lines = [`── Profile #${i+1} ──`];
+      for (const [k,v] of Object.entries(p)) lines.push(`${k}: ${v}`);
+      return lines.join("\n");
+    });
+    output.textContent = blocks.join("\n\n");
+    countLbl.textContent = profiles.length ? `${profiles.length} profile${profiles.length===1?"":"s"}` : "";
+  }
+
+  card.appendChild(primaryButton("Generate Profiles", () => {
+    const selected = new Set(Object.entries(checks).filter(([,c]) => c.checked).map(([k]) => k));
+    if (!selected.size){ toast("Toggle at least one field to include."); return; }
+    let ageMin = +minAge.value, ageMax = +maxAge.value;
+    if (ageMin > ageMax) [ageMin, ageMax] = [ageMax, ageMin];
+    const loc = LOCALE_DATA[localeSel.value];
+    RNG.seed(seedInput.value.trim());
+    const n = +count.value;
+    profiles = Array.from({length:n}, () => buildProfile(loc, selected, ageMin, ageMax));
+    RNG.seed(""); // don't let the seed leak into other pages
+    render();
+    logHistory("Fake Profiles", profiles.map((p,i) => p["Name"] || `Profile ${i+1}`));
+  }));
+
+  copyAllBtn.addEventListener("click", () => copyText(output.textContent));
+  clearBtn.addEventListener("click", () => { profiles = []; render(); });
+  exportBtn.addEventListener("click", () => {
+    if (!profiles.length){ toast("Generate some profiles first."); return; }
+    const fmt = fmtSel.value;
+    const disclaimer = "All data is synthetically generated and not linked to any real person, account, or number. For mockups, demos, and testing only.";
+    if (fmt === "txt") downloadBlob("fake_profiles.txt", `# ${disclaimer}\n\n` + output.textContent, "text/plain");
+    else if (fmt === "json") downloadBlob("fake_profiles.json", JSON.stringify({disclaimer, profiles}, null, 2), "application/json");
+    else {
+      const fieldnames = []; profiles.forEach(p => Object.keys(p).forEach(k => { if (!fieldnames.includes(k)) fieldnames.push(k); }));
+      const rows = profiles.map(p => fieldnames.map(k => `"${String(p[k]??"").replace(/"/g,'""')}"`).join(","));
+      downloadBlob("fake_profiles.csv", `# ${disclaimer}\n` + [fieldnames.join(",")].concat(rows).join("\n"), "text/csv");
+    }
+  });
+});
+
+/* ============================================================
+   PAGE: Bulk Renamer
+   ============================================================ */
+registerPage("renamer", "📝", "Bulk Renamer", "Tools", (container) => {
+  pageHeader(container, "Bulk Renamer", "Select files or a folder, set a prefix, and get renamed copies — prefix1, prefix2, prefix3…");
+  const body = pageBody(container);
+  const card = controlsCard(body);
+
+  card.appendChild(el("div", {class:"notice"},
+    "Browsers can't rename files on your device in place (that's a security restriction, not a limitation of this tool). " +
+    "Instead, pick files or a folder below and download a ZIP containing renamed copies — drop those in to replace the originals."));
+
+  const fileInput = el("input", {type:"file", multiple:"multiple", style:"display:none;"});
+  const folderInput = el("input", {type:"file", multiple:"multiple", webkitdirectory:"", style:"display:none;"});
+  card.append(fileInput, folderInput);
+
+  const btnRow = el("div", {class:"btn-row"});
+  const pickFilesBtn = el("button", {}, "Select Files…");
+  const pickFolderBtn = el("button", {}, "Select Folder…");
+  btnRow.append(pickFilesBtn, pickFolderBtn);
+  card.appendChild(btnRow);
+  pickFilesBtn.addEventListener("click", () => fileInput.click());
+  pickFolderBtn.addEventListener("click", () => folderInput.click());
+
+  const selectionLabel = el("div", {class:"hint"}, "Nothing selected yet.");
+  card.appendChild(selectionLabel);
+
+  const recursiveF = checkField("Include subfolders (folder mode)", true);
+  card.appendChild(recursiveF.wrap);
+
+  const prefixInput = makeText("", "file_"); card.appendChild(fieldRow("Prefix", prefixInput));
+  const startInput = makeNumber(0,1000000,1,1); card.appendChild(fieldRow("Start at", startInput));
+  const zeroPadF = checkField("Zero-pad numbers"); card.appendChild(zeroPadF.wrap);
+  const padWidth = makeNumber(1,10,3,1); card.appendChild(fieldRow("Pad width", padWidth));
+  const keepExtF = checkField("Keep original file extension", true); card.appendChild(keepExtF.wrap);
+  const sortSel = makeSelect(["Name (A–Z)","Name (Z–A)","Date modified (oldest first)","Date modified (newest first)","Size (smallest first)","Size (largest first)","Selection order"]);
+  card.appendChild(fieldRow("Order by", sortSel));
+
+  const downloadBtn = primaryButton("Download Renamed Copies (ZIP)", doDownload);
+  downloadBtn.disabled = true;
+  card.appendChild(downloadBtn);
+
+  const right = el("div", {class:"results-col"}); body.appendChild(right);
+  const previewCount = el("span", {class:"stat"}, "");
+  right.appendChild(el("div", {class:"results-head"}, [el("h3", {}, "Preview"), previewCount]));
+  const previewList = el("div", {class:"results-list"});
+  previewList.appendChild(el("div", {class:"empty"}, "Select files or a folder to preview renamed names."));
+  right.appendChild(previewList);
+  right.appendChild(el("div", {class:"hint"}, "Rows in red would collide with another renamed item in this batch — fix your options before downloading."));
+
+  let files = []; // {file, relPath}
+
+  function onFilesChosen(fileList, isFolder){
+    files = [...fileList].map(f => ({file:f, relPath: f.webkitRelativePath || f.name}));
+    selectionLabel.textContent = isFolder
+      ? `Folder selection: ${files.length} file(s) found`
+      : `${files.length} file(s) selected`;
+    updatePreview();
+  }
+  fileInput.addEventListener("change", () => onFilesChosen(fileInput.files, false));
+  folderInput.addEventListener("change", () => onFilesChosen(folderInput.files, true));
+  [recursiveF.input, prefixInput, startInput, zeroPadF.input, padWidth, keepExtF.input, sortSel].forEach(w =>
+    w.addEventListener("input", updatePreview) || w.addEventListener("change", updatePreview));
+
+  function activeFiles(){
+    if (!recursiveF.input.checked){
+      // "non-recursive": keep only files directly inside the picked root (relPath has <=1 folder segment)
+      return files.filter(f => f.relPath.split("/").length <= 2);
+    }
+    return files;
+  }
+  function sortedFiles(){
+    const arr = activeFiles().slice();
+    const key = sortSel.value;
+    if (key.startsWith("Name (A")) arr.sort((a,b) => a.file.name.toLowerCase().localeCompare(b.file.name.toLowerCase()));
+    else if (key.startsWith("Name (Z")) arr.sort((a,b) => b.file.name.toLowerCase().localeCompare(a.file.name.toLowerCase()));
+    else if (key === "Date modified (oldest first)") arr.sort((a,b) => a.file.lastModified - b.file.lastModified);
+    else if (key === "Date modified (newest first)") arr.sort((a,b) => b.file.lastModified - a.file.lastModified);
+    else if (key === "Size (smallest first)") arr.sort((a,b) => a.file.size - b.file.size);
+    else if (key === "Size (largest first)") arr.sort((a,b) => b.file.size - a.file.size);
+    return arr;
+  }
+  function extOf(name){ const i = name.lastIndexOf("."); return i > 0 ? name.slice(i) : ""; }
+  function computeNewNames(){
+    const arr = sortedFiles();
+    const prefix = prefixInput.value;
+    const start = +startInput.value;
+    const keepExt = keepExtF.input.checked;
+    return arr.map((item, idx) => {
+      const num = start + idx;
+      const numStr = zeroPadF.input.checked ? String(num).padStart(+padWidth.value, "0") : String(num);
+      const newName = keepExt ? `${prefix}${numStr}${extOf(item.file.name)}` : `${prefix}${numStr}`;
+      return {item, newName};
+    });
+  }
+  function updatePreview(){
+    const pairs = computeNewNames();
+    previewList.innerHTML = "";
+    if (!pairs.length){
+      previewList.appendChild(el("div", {class:"empty"}, "Select files or a folder to preview renamed names."));
+      previewCount.textContent = "";
+      downloadBtn.disabled = true;
+      return;
+    }
+    const seen = new Map();
+    let conflicts = 0;
+    pairs.forEach(({item,newName}) => {
+      const count = (seen.get(newName) || 0) + 1;
+      seen.set(newName, count);
+    });
+    pairs.forEach(({item,newName}) => {
+      const conflict = seen.get(newName) > 1;
+      if (conflict) conflicts++;
+      const row = el("div", {class:"result-item" + (conflict ? " conflict" : "")}, [el("span", {}, `${item.file.name}    →    ${newName}`)]);
+      previewList.appendChild(row);
+    });
+    previewCount.textContent = `${pairs.length} item(s)` + (conflicts ? ` — ${conflicts} conflict(s)` : "");
+    downloadBtn.disabled = conflicts > 0;
+  }
+
+  async function doDownload(){
+    const pairs = computeNewNames();
+    if (!pairs.length){ toast("Select files or a folder first."); return; }
+    downloadBtn.disabled = true;
+    downloadBtn.textContent = "Zipping…";
+    try{
+      const zip = new JSZip();
+      for (const {item,newName} of pairs){
+        const buf = await item.file.arrayBuffer();
+        zip.file(newName, buf);
+      }
+      const blob = await zip.generateAsync({type:"blob"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = "renamed_files.zip";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      logHistory("Bulk Renamer", pairs.map(p => p.newName));
+      toast(`Downloaded ${pairs.length} renamed file(s) as ZIP`);
+    } catch(e){
+      toast("Couldn't build ZIP: " + e.message);
+    } finally {
+      downloadBtn.disabled = false;
+      downloadBtn.textContent = "Download Renamed Copies (ZIP)";
+    }
+  }
+});
+
+/* ============================================================
+   BOOTSTRAP
+   ============================================================ */
+function initApp(){
+  renderSidebar();
+  renderHistory();
+  applyTheme();
+  selectPage(NAV[0].key);
+
+  document.getElementById("themeToggle").addEventListener("click", () => { isDark = !isDark; applyTheme(); });
+
+  const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+  document.getElementById("paletteKbdHint").textContent = isMac ? "⌘ K" : "Ctrl K";
+  document.getElementById("paletteHint").addEventListener("click", openPalette);
+  document.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k"){ e.preventDefault(); openPalette(); }
+    else if (e.key === "Escape") closePalette();
+  });
+  document.getElementById("palette-overlay").addEventListener("click", (e) => { if (e.target.id === "palette-overlay") closePalette(); });
+  const paletteInput = document.getElementById("paletteInput");
+  paletteInput.addEventListener("input", () => renderPaletteResults(paletteInput.value));
+  paletteInput.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowDown"){ e.preventDefault(); movePaletteSel(1); }
+    else if (e.key === "ArrowUp"){ e.preventDefault(); movePaletteSel(-1); }
+    else if (e.key === "Enter"){ e.preventDefault(); if (paletteMatches[paletteSel]){ selectPage(paletteMatches[paletteSel].key); closePalette(); } }
+  });
+
+  const drawer = document.getElementById("history-drawer");
+  document.getElementById("historyToggle").addEventListener("click", () => drawer.classList.toggle("open"));
+  document.getElementById("historyClose").addEventListener("click", () => drawer.classList.remove("open"));
+  document.getElementById("historyClear").addEventListener("click", () => { historyEntries.length = 0; renderHistory(); });
+
+  document.getElementById("hamburgerBtn").addEventListener("click", () => document.getElementById("sidebar").classList.toggle("open"));
+
+  document.getElementById("globalSeed").addEventListener("input", (e) => RNG.seed(e.target.value.trim()));
+
+  document.getElementById("aboutBtn").addEventListener("click", () => {
+    const overlay = el("div", {id:"about-overlay", style:"position:fixed; inset:0; background:rgba(5,6,10,.55); backdrop-filter:blur(2px); display:flex; align-items:center; justify-content:center; z-index:700;"});
+    const box = el("div", {class:"card", style:"max-width:440px; padding:24px; margin:16px;"}, [
+      el("h2", {style:"font-family:var(--font-display); margin:0 0 10px;"}, "Random Studio"),
+      el("div", {class:"hint", style:"line-height:1.7; font-size:12.5px;"},
+        "A fast, modern, all-in-one random data & developer QoL toolkit — built to run entirely in your browser, no server, no accounts, no data leaving your device.\n\n" +
+        "Numbers · Strings · Passwords · UUIDs · Colors · Names · Dates · Lorem Ipsum · List Tools · Network · Words · Dev Tools · Bulk Renamer · Fake Profiles · Text Scrambler · Progression Scaler"),
+      el("button", {class:"primary", style:"margin-top:16px;", onclick:() => overlay.remove()}, "Close"),
+    ]);
+    overlay.appendChild(box);
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
+    document.body.appendChild(overlay);
+  });
 }
-
-function renderInline(container, name, bytes) {
-  container.innerHTML = '';
-  const kind = classifyContent(name, bytes);
-  if (kind === 'image') {
-    const blob = new Blob([bytes]);
-    const img = document.createElement('img');
-    img.src = URL.createObjectURL(blob);
-    container.appendChild(img);
-    const info = document.createElement('div');
-    info.className = 'hint';
-    info.style.textAlign = 'center';
-    info.textContent = humanSize(bytes.length);
-    container.appendChild(info);
-  } else if (kind === 'pdf') {
-    const p = document.createElement('div');
-    p.className = 'hint';
-    p.style.textAlign = 'center';
-    p.textContent = `📕 PDF document — ${humanSize(bytes.length)}. Inline preview isn't supported — use Save As to export it.`;
-    container.appendChild(p);
-  } else if (kind === 'text') {
-    const pre = document.createElement('pre');
-    pre.textContent = new TextDecoder('utf-8', { fatal: false }).decode(bytes);
-    container.appendChild(pre);
-  } else {
-    const snippet = bytes.subarray(0, 4096);
-    const pre = document.createElement('pre');
-    pre.textContent = hexDump(snippet) + (bytes.length > snippet.length ? `\n… (${humanSize(bytes.length - snippet.length)} more, not shown)` : '');
-    container.appendChild(pre);
-  }
-}
-
-/* ---------- wire up UI ---------- */
-$('modeEncryptBtn').addEventListener('click', () => setMode('encrypt'));
-$('modeDecryptBtn').addEventListener('click', () => setMode('decrypt'));
-
-$('addFilesBtn').addEventListener('click', () => $('fileInput').click());
-$('addFolderBtn').addEventListener('click', () => $('folderInput').click());
-$('fileInput').addEventListener('change', async (e) => {
-  const files = Array.from(e.target.files);
-  if (await tryHandleKeyfileDrop(files)) { e.target.value = ''; return; }
-  const vaultCount = files.filter(f => f.name.toLowerCase().endsWith(ENC_EXT)).length;
-  maybeOfferModeSwitch(vaultCount, files.length - vaultCount, files[0] && files[0].name);
-  files.forEach(addFileItem);
-  e.target.value = '';
-});
-$('folderInput').addEventListener('change', (e) => {
-  const files = Array.from(e.target.files);
-  if (files.length === 0) return;
-  const top = files[0].webkitRelativePath.split('/')[0];
-  const entries = files.map(f => ({ relPath: f.webkitRelativePath, file: f }));
-  addFolderItem(top, entries);
-  e.target.value = '';
-});
-$('removeSelectedBtn').addEventListener('click', removeSelected);
-$('clearAllBtn').addEventListener('click', clearQueue);
-$('previewBtn').addEventListener('click', previewSelected);
-$('verifyBtn').addEventListener('click', verifySelected);
-
-const dz = $('dropzone');
-dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('dragover'); });
-dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
-dz.addEventListener('drop', async (e) => {
-  e.preventDefault();
-  dz.classList.remove('dragover');
-  const items = e.dataTransfer.items;
-  if (items && items.length && items[0].webkitGetAsEntry) {
-    const plainFiles = Array.from(e.dataTransfer.files || []);
-    if (await tryHandleKeyfileDrop(plainFiles)) return;
-    const vaultCount = plainFiles.filter(f => f.name.toLowerCase().endsWith(ENC_EXT)).length;
-    const dirCount = Array.from(items).filter(it => { const en = it.webkitGetAsEntry && it.webkitGetAsEntry(); return en && en.isDirectory; }).length;
-    maybeOfferModeSwitch(vaultCount, (plainFiles.length - vaultCount) + dirCount, plainFiles[0] && plainFiles[0].name);
-    await handleDroppedItems(items);
-  } else {
-    const files = Array.from(e.dataTransfer.files || []);
-    if (await tryHandleKeyfileDrop(files)) return;
-    files.forEach(addFileItem);
-  }
-});
-
-$('pwField').addEventListener('input', onPasswordChanged);
-$('pwToggle').addEventListener('click', () => {
-  const f = $('pwField');
-  f.type = f.type === 'password' ? 'text' : 'password';
-  $('pwToggle').textContent = f.type === 'password' ? '👁' : '🙈';
-});
-$('pwConfirmToggle').addEventListener('click', () => {
-  const f = $('pwConfirm');
-  f.type = f.type === 'password' ? 'text' : 'password';
-  $('pwConfirmToggle').textContent = f.type === 'password' ? '👁' : '🙈';
-});
-$('genPasswordBtn').addEventListener('click', () => {
-  const pw = generateStrongPassword();
-  $('pwField').value = pw; $('pwConfirm').value = pw;
-  onPasswordChanged();
-  navigator.clipboard && navigator.clipboard.writeText(pw).catch(() => {});
-  log('Generated a strong password (copied to clipboard, if permitted).');
-  setTimeout(async () => {
-    try { if ((await navigator.clipboard.readText()) === pw) await navigator.clipboard.writeText(''); } catch (e) {}
-  }, 30000);
-});
-$('genKeyfileBtn').addEventListener('click', () => {
-  const secret = generateKeyfileSecret();
-  const bytes = keyfileJsonBytes(secret);
-  downloadBytes(bytes, 'vaultcrypt.key');
-  $('pwField').value = secret; $('pwConfirm').value = secret;
-  onPasswordChanged();
-  log('Generated key file "vaultcrypt.key" and filled in the password field.');
-  alert('Key file downloaded.\n\nThis key file is the only way to decrypt anything encrypted with it — there\'s no password to fall back on. Store it somewhere safe and separate from your encrypted files. If it\'s lost, the data cannot be recovered.');
-});
-$('importKeyfileBtn').addEventListener('click', () => $('keyfileInput').click());
-$('keyfileInput').addEventListener('change', async (e) => {
-  if (e.target.files[0]) await applyKeyfile(e.target.files[0]);
-  e.target.value = '';
-});
-$('startBtn').addEventListener('click', startJob);
-
-$('previewCloseBtn').addEventListener('click', () => $('previewBackdrop').classList.remove('open'));
-$('previewBackdrop').addEventListener('click', (e) => { if (e.target === e.currentTarget) $('previewBackdrop').classList.remove('open'); });
-
-setMode('encrypt');
+document.addEventListener("DOMContentLoaded", initApp);
 </script>
 </body>
 </html>
