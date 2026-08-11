@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VaultCrypt Web</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+:root {
+  --bg: #14161c;
+  --card: #1c1f28;
+  --border: #2a2e3a;
+  --border-light: #343a4d;
+  --input-bg: #10121a;
+  --text: #e6e8ee;
+  --text-dim: #9aa0b4;
+  --text-dimmer: #6d7186;
+  --accent: #5865f2;
+  --accent-hover: #6b76f5;
+  --danger: #f47174;
+  --danger-bg: #341a1f;
+  --danger-border: #4a2530;
+  --good: #3ecf8e;
+  --warn: #f5a623;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, "Segoe UI", "Inter", sans-serif;
+  font-size: 14px;
+}
+.wrap { max-width: 960px; margin: 0 auto; padding: 28px 20px 60px; }
+header { margin-bottom: 18px; }
+header h1 { font-size: 22px; font-weight: 800; margin: 0 0 2px; display: flex; align-items: center; gap: 8px; }
+header p { margin: 0; color: var(--text-dim); font-size: 12.5px; }
+header .badge {
+  display: inline-block; margin-top: 8px; font-size: 11px; color: var(--text-dimmer);
+  border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px;
+}
+
+.mode-toggle {
+  display: flex; gap: 0; background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 6px; margin-bottom: 16px;
+}
+.mode-toggle button {
+  flex: 1; padding: 10px 16px; border: none; border-radius: 8px; background: transparent;
+  color: var(--text-dim); font-weight: 600; font-size: 14px; cursor: pointer; transition: background .15s;
+}
+.mode-toggle button.active { background: var(--accent); color: white; }
+
+.grid { display: grid; grid-template-columns: 3fr 2fr; gap: 16px; }
+@media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+
+.card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px;
+}
+.section-label {
+  font-size: 11px; font-weight: 700; letter-spacing: .06em; color: var(--text-dim);
+  text-transform: uppercase; margin: 0 0 8px;
+}
+.row-between { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.dim { color: var(--text-dimmer); font-size: 12px; }
+
+#dropzone {
+  border: 1.5px dashed #33384a; border-radius: 10px; min-height: 170px; padding: 10px;
+  display: flex; flex-direction: column; gap: 4px; overflow-y: auto; max-height: 320px;
+  transition: border-color .15s, background .15s;
+}
+#dropzone.dragover { border-color: var(--accent); background: rgba(88,101,242,0.08); }
+#dropzone .empty-hint {
+  flex: 1; display: flex; align-items: center; justify-content: center; text-align: center;
+  color: var(--text-dimmer); font-size: 12.5px; padding: 20px;
+}
+.queue-item {
+  display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; cursor: pointer;
+  font-size: 13px;
+}
+.queue-item:hover { background: #212636; }
+.queue-item.selected { background: #2a3550; }
+.queue-item .qname { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.queue-item .qsize { color: var(--text-dimmer); font-size: 11.5px; flex-shrink: 0; }
+
+.btn-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+button.btn {
+  background: #262b3a; border: 1px solid var(--border-light); border-radius: 8px; padding: 9px 14px;
+  color: var(--text); font-weight: 500; font-size: 13px; cursor: pointer; transition: background .15s;
+}
+button.btn:hover { background: #2f3547; }
+button.btn:disabled { color: #55596b; background: #1a1c24; cursor: not-allowed; }
+button.btn.grow { flex: 1; }
+button.btn.primary { background: var(--accent); border: none; color: white; font-weight: 700; padding: 11px 16px; }
+button.btn.primary:hover { background: var(--accent-hover); }
+button.btn.primary:disabled { background: #333a55; color: #7a7f99; }
+button.btn.danger { background: transparent; border: 1px solid var(--danger-border); color: var(--danger); }
+button.btn.danger:hover { background: var(--danger-bg); }
+
+input[type=text], input[type=password] {
+  width: 100%; background: var(--input-bg); border: 1.5px solid var(--border); border-radius: 8px;
+  padding: 9px 10px; color: #f0f1f5; font-size: 13.5px; min-height: 20px;
+}
+input[type=text]:focus, input[type=password]:focus { outline: none; border-color: var(--accent); }
+.pw-field { display: flex; gap: 6px; align-items: center; }
+.pw-field input { flex: 1; }
+.pw-field button { flex-shrink: 0; background: transparent; border: none; color: var(--text-dim); font-size: 16px; cursor: pointer; padding: 4px 6px; }
+.pw-field button:hover { color: var(--text); }
+
+.strength-bar { height: 5px; border-radius: 3px; background: var(--input-bg); margin-top: 8px; overflow: hidden; }
+.strength-bar > div { height: 100%; width: 0%; transition: width .15s, background .15s; }
+.strength-label { font-size: 11px; color: var(--text-dimmer); margin-top: 3px; height: 14px; }
+
+.checkbox-row { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-size: 13px; color: #cdd0dd; }
+.checkbox-row input { accent-color: var(--accent); width: 15px; height: 15px; }
+
+.progress-card { margin-top: 16px; }
+.progress-outer {
+  background: var(--input-bg); border-radius: 6px; height: 10px; overflow: hidden; margin: 8px 0 6px;
+}
+.progress-outer > div { height: 100%; background: var(--accent); width: 0%; transition: width .1s; }
+.progress-outer.small { height: 5px; }
+#log {
+  background: #0f1117; border: 1px solid var(--border); border-radius: 8px; color: #a9c9a9;
+  font-family: Consolas, Menlo, monospace; font-size: 11.5px; height: 110px; overflow-y: auto;
+  padding: 8px 10px; margin-top: 8px; white-space: pre-wrap;
+}
+
+.hint { font-size: 11px; color: var(--text-dimmer); margin-top: 6px; line-height: 1.4; }
+
+/* Modal (preview) */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none;
+  align-items: center; justify-content: center; z-index: 1000; padding: 20px;
+}
+.modal-backdrop.open { display: flex; }
+.modal {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+  width: 100%; max-width: 720px; max-height: 85vh; display: flex; flex-direction: column;
+  padding: 18px; gap: 10px;
+}
+.modal-head { display: flex; align-items: center; gap: 8px; }
+.modal-head .title { font-weight: 700; font-size: 15px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.badge-ok { color: var(--good); font-weight: 700; font-size: 12.5px; }
+.badge-bad { color: var(--danger); font-weight: 700; font-size: 12.5px; }
+.modal-body { flex: 1; overflow: auto; min-height: 100px; }
+.modal-body img { max-width: 100%; display: block; margin: 0 auto; border-radius: 8px; }
+.modal-body pre {
+  background: #0f1117; border: 1px solid var(--border); border-radius: 8px; padding: 10px;
+  font-family: Consolas, Menlo, monospace; font-size: 11.5px; white-space: pre-wrap; word-break: break-all;
+  margin: 0;
+}
+.modal-foot { display: flex; justify-content: flex-end; gap: 8px; }
+.zip-entry-list { display: flex; flex-direction: column; gap: 2px; max-height: 200px; overflow-y: auto; margin-bottom: 8px; }
+.zip-entry-list div { padding: 6px 8px; border-radius: 6px; cursor: pointer; font-size: 12.5px; }
+.zip-entry-list div:hover { background: #212636; }
+
+.toast-area { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 1100; }
+.toast {
+  background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px;
+  font-size: 13px; max-width: 320px; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.toast.error { border-color: var(--danger-border); }
+
+footer { margin-top: 24px; text-align: center; color: var(--text-dimmer); font-size: 11.5px; }
+footer a { color: var(--text-dim); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🔒 VaultCrypt Web</h1>
+    <p>Same AES-256-GCM + scrypt <code>.vault</code> format as the desktop app — files made in one work in the other.</p>
+    <span class="badge">Runs entirely in your browser · nothing is uploaded anywhere</span>
+  </header>
+
+  <div class="mode-toggle">
+    <button id="modeEncryptBtn" class="active">🔐 Encrypt</button>
+    <button id="modeDecryptBtn">🔓 Decrypt</button>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="row-between">
+        <div class="section-label" style="margin:0;">Files &amp; Folders</div>
+        <div class="dim" id="queueCount">0 items</div>
+      </div>
+      <div id="dropzone">
+        <div class="empty-hint" id="emptyHint">Drag &amp; drop files or a folder here<br>double-click a .vault file to preview it</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="addFilesBtn">＋ Add Files</button>
+        <button class="btn" id="addFolderBtn">＋ Add Folder</button>
+        <button class="btn" id="removeSelectedBtn">Remove Selected</button>
+        <button class="btn danger" id="clearAllBtn">Clear All</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn grow" id="previewBtn">👁 Preview Selected</button>
+        <button class="btn grow" id="verifyBtn">✔ Verify Integrity</button>
+      </div>
+      <input type="file" id="fileInput" multiple style="display:none">
+      <input type="file" id="folderInput" webkitdirectory multiple style="display:none">
+    </div>
+
+    <div class="card">
+      <div class="section-label">Password</div>
+      <div class="pw-field">
+        <input type="password" id="pwField" placeholder="Enter password" autocomplete="new-password">
+        <button id="pwToggle" title="Show/hide">👁</button>
+      </div>
+      <div class="strength-bar" id="strengthBarOuter"><div id="strengthBar"></div></div>
+      <div class="strength-label" id="strengthLabel"></div>
+
+      <div id="confirmRow" style="margin-top:10px;">
+        <div class="section-label">Confirm Password</div>
+        <div class="pw-field">
+          <input type="password" id="pwConfirm" placeholder="Re-enter password" autocomplete="new-password">
+          <button id="pwConfirmToggle" title="Show/hide">👁</button>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn grow" id="genPasswordBtn">🎲 Generate Strong Password</button>
+      </div>
+
+      <div class="section-label" style="margin-top:14px;">Key File (optional)</div>
+      <div class="btn-row" style="margin-top:0;">
+        <button class="btn grow" id="genKeyfileBtn">🔑 Generate Key File…</button>
+        <button class="btn grow" id="importKeyfileBtn">📂 Import Key File…</button>
+      </div>
+      <div class="hint" id="keyfileHint">Use a key file instead of typing a password — great for backups.</div>
+      <input type="file" id="keyfileInput" accept=".key" style="display:none">
+
+      <div class="checkbox-row" style="margin-top:14px;">
+        <input type="checkbox" id="autoDownloadChk" checked>
+        <label for="autoDownloadChk">Download automatically when each item finishes</label>
+      </div>
+
+      <button class="btn primary" id="startBtn" style="width:100%; margin-top:14px;">Start Encryption</button>
+    </div>
+  </div>
+
+  <div class="card progress-card">
+    <div class="row-between">
+      <div id="phaseLabel" style="font-weight:600;">Ready</div>
+      <div class="dim" id="overallPct">0%</div>
+    </div>
+    <div class="progress-outer"><div id="overallProgress"></div></div>
+    <div class="progress-outer small"><div id="itemProgress"></div></div>
+    <div id="log"></div>
+  </div>
+
+  <footer>
+    Scrypt (N=65536, r=8, p=1) + AES-256-GCM, chunked with an authenticated integrity trailer — identical format to the VaultCrypt desktop app.
+  </footer>
+</div>
+
+<div class="modal-backdrop" id="previewBackdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="title" id="previewTitle">Preview</div>
+      <div id="previewBadge"></div>
+    </div>
+    <div class="modal-body" id="previewBody"></div>
+    <div class="modal-foot">
+      <button class="btn" id="previewSaveBtn">💾 Save As…</button>
+      <button class="btn primary" id="previewCloseBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-area" id="toastArea"></div>
+
+<script>
+/* ==================== Embedded, tested crypto core (scrypt.js + vault.js) ==================== */
+'use strict';
+// Pure-JS scrypt (RFC 7914), built on Web Crypto's PBKDF2-HMAC-SHA256 for the
+// outer expand/contract steps. Salsa20/8 core + BlockMix + ROMix implemented
+// directly since Web Crypto has no scrypt primitive.
+
+function rotl(a, b) { return (a << b) | (a >>> (32 - b)); }
+
+// One Salsa20/8 core application on a 16-word (64-byte) block, in place into `out`.
+function salsa208(inBlock, out) {
+  for (let i = 0; i < 16; i++) out[i] = inBlock[i];
+  for (let i = 0; i < 8; i += 2) {
+    out[4]  ^= rotl(out[0]  + out[12], 7);   out[8]  ^= rotl(out[4]  + out[0],  9);
+    out[12] ^= rotl(out[8]  + out[4], 13);   out[0]  ^= rotl(out[12] + out[8], 18);
+    out[9]  ^= rotl(out[5]  + out[1],  7);   out[13] ^= rotl(out[9]  + out[5],  9);
+    out[1]  ^= rotl(out[13] + out[9], 13);   out[5]  ^= rotl(out[1]  + out[13],18);
+    out[14] ^= rotl(out[10] + out[6],  7);   out[2]  ^= rotl(out[14] + out[10], 9);
+    out[6]  ^= rotl(out[2]  + out[14],13);   out[10] ^= rotl(out[6]  + out[2], 18);
+    out[3]  ^= rotl(out[15] + out[11], 7);   out[7]  ^= rotl(out[3]  + out[15], 9);
+    out[11] ^= rotl(out[7]  + out[3], 13);   out[15] ^= rotl(out[11] + out[7], 18);
+
+    out[1]  ^= rotl(out[0]  + out[3],  7);   out[2]  ^= rotl(out[1]  + out[0],  9);
+    out[3]  ^= rotl(out[2]  + out[1], 13);   out[0]  ^= rotl(out[3]  + out[2], 18);
+    out[6]  ^= rotl(out[5]  + out[4],  7);   out[7]  ^= rotl(out[6]  + out[5],  9);
+    out[4]  ^= rotl(out[7]  + out[6], 13);   out[5]  ^= rotl(out[4]  + out[7], 18);
+    out[11] ^= rotl(out[10] + out[9],  7);   out[8]  ^= rotl(out[11] + out[10], 9);
+    out[9]  ^= rotl(out[8]  + out[11],13);   out[10] ^= rotl(out[9]  + out[8], 18);
+    out[12] ^= rotl(out[15] + out[14], 7);   out[13] ^= rotl(out[12] + out[15], 9);
+    out[14] ^= rotl(out[13] + out[12],13);   out[15] ^= rotl(out[14] + out[13],18);
+  }
+  for (let i = 0; i < 16; i++) out[i] = (out[i] + inBlock[i]) | 0;
+}
+
+// BlockMix_{Salsa20/8, r} — B is a Uint32Array of length 32*r (2r blocks of 16 words).
+function blockMix(B, r) {
+  const out = new Uint32Array(32 * r);
+  const X = new Uint32Array(16);
+  const T = new Uint32Array(16);
+  X.set(B.subarray((2 * r - 1) * 16, (2 * r - 1) * 16 + 16));
+
+  const Yeven = new Uint32Array(16 * r);
+  const Yodd = new Uint32Array(16 * r);
+  for (let i = 0; i < 2 * r; i++) {
+    for (let k = 0; k < 16; k++) T[k] = X[k] ^ B[i * 16 + k];
+    salsa208(T, X);
+    if (i % 2 === 0) Yeven.set(X, (i / 2) * 16);
+    else Yodd.set(X, ((i - 1) / 2) * 16);
+  }
+  out.set(Yeven, 0);
+  out.set(Yodd, 16 * r);
+  return out;
+}
+
+function yieldToUI() {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+// ROMix_r(B, N) — B is Uint32Array of length 32*r. Yields periodically so the
+// browser tab stays responsive during the ~1s of pure computation this needs.
+async function romix(B, N, r) {
+  const blockWords = 32 * r;
+  const V = new Uint32Array(N * blockWords);
+  let X = B;
+  const yieldEvery = Math.max(N >> 4, 1);
+  for (let i = 0; i < N; i++) {
+    V.set(X, i * blockWords);
+    X = blockMix(X, r);
+    if (i % yieldEvery === 0) await yieldToUI();
+  }
+  const mask = N - 1; // N is always a power of two
+  for (let i = 0; i < N; i++) {
+    // Integerify: low 32 bits of the last 64-byte block of X, mod N.
+    const j = X[(2 * r - 1) * 16] & mask;
+    const Xj = new Uint32Array(blockWords);
+    for (let k = 0; k < blockWords; k++) Xj[k] = X[k] ^ V[j * blockWords + k];
+    X = blockMix(Xj, r);
+    if (i % yieldEvery === 0) await yieldToUI();
+  }
+  return X;
+}
+
+function bytesToWordsLE(bytes) {
+  const words = new Uint32Array(bytes.length / 4);
+  const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  for (let i = 0; i < words.length; i++) words[i] = dv.getUint32(i * 4, true);
+  return words;
+}
+
+function wordsToBytesLE(words) {
+  const bytes = new Uint8Array(words.length * 4);
+  const dv = new DataView(bytes.buffer);
+  for (let i = 0; i < words.length; i++) dv.setUint32(i * 4, words[i], true);
+  return bytes;
+}
+
+async function pbkdf2Sha256(passwordBytes, saltBytes, iterations, lengthBytes) {
+  const subtle = (globalThis.crypto && globalThis.crypto.subtle);
+  const key = await subtle.importKey('raw', passwordBytes, { name: 'PBKDF2' }, false, ['deriveBits']);
+  const bits = await subtle.deriveBits(
+    { name: 'PBKDF2', hash: 'SHA-256', salt: saltBytes, iterations },
+    key, lengthBytes * 8
+  );
+  return new Uint8Array(bits);
+}
+
+// scrypt(password, salt, N, r, p, dkLen) -> Uint8Array(dkLen)
+async function scrypt(passwordBytes, saltBytes, N, r, p, dkLen) {
+  const blockBytes = 128 * r;
+  const Bbytes = await pbkdf2Sha256(passwordBytes, saltBytes, 1, p * blockBytes);
+  const outBlocks = new Uint8Array(p * blockBytes);
+  for (let i = 0; i < p; i++) {
+    const chunk = Bbytes.subarray(i * blockBytes, (i + 1) * blockBytes);
+    const words = bytesToWordsLE(chunk);
+    const mixed = await romix(words, N, r);
+    outBlocks.set(wordsToBytesLE(mixed), i * blockBytes);
+  }
+  return await pbkdf2Sha256(passwordBytes, outBlocks, 1, dkLen);
+}
+
+
+'use strict';
+// Implements the exact VaultCrypt v3 .vault container format, matching the
+// Python desktop app byte-for-byte, so files are interchangeable both ways.
+//
+// Format:
+//   MAGIC (8 bytes)            = "VAULTCR3"
+//   scrypt N,r,p (3x uint32 BE)
+//   salt (16 bytes)
+//   base_nonce (8 bytes)
+//   chunk*  = [uint32 BE ciphertext_len][ciphertext (AES-256-GCM, 16-byte tag incl.)]
+//   ... last chunk is the authenticated trailer (AAD = TRAILER_AAD, plaintext = SHA-256 of full content)
+//
+// Plaintext stream (before chunking) = [1 byte is_folder][uint16 BE name_len][name utf-8][raw bytes...]
+
+
+const MAGIC = new TextEncoder().encode('VAULTCR3'); // 8 bytes
+const SALT_LEN = 16;
+const BASE_NONCE_LEN = 8;
+const CHUNK_SIZE = 4 * 1024 * 1024;
+const SCRYPT_N = 65536, SCRYPT_R = 8, SCRYPT_P = 1;
+const TRAILER_AAD = new TextEncoder().encode('VAULTCRYPT-EOF-TRAILER-v3');
+
+class WrongPasswordError extends Error {}
+class CorruptedFileError extends Error {}
+
+function concatBytes(...arrs) {
+  let total = 0;
+  for (const a of arrs) total += a.length;
+  const out = new Uint8Array(total);
+  let off = 0;
+  for (const a of arrs) { out.set(a, off); off += a.length; }
+  return out;
+}
+
+function u32be(n) {
+  const b = new Uint8Array(4);
+  new DataView(b.buffer).setUint32(0, n, false);
+  return b;
+}
+function readU32be(bytes, offset) {
+  return new DataView(bytes.buffer, bytes.byteOffset + offset, 4).getUint32(0, false);
+}
+
+async function deriveKey(password, salt, n = SCRYPT_N, r = SCRYPT_R, p = SCRYPT_P) {
+  const pwBytes = new TextEncoder().encode(password);
+  return await scrypt(pwBytes, salt, n, r, p, 32);
+}
+
+async function importAesKey(rawKeyBytes) {
+  return await crypto.subtle.importKey('raw', rawKeyBytes, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+}
+
+async function sha256(bytes) {
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return new Uint8Array(digest);
+}
+
+/**
+ * Encrypt a single blob of bytes into the .vault container format.
+ * @param {Uint8Array} dataBytes - raw content (already-zipped bytes for a folder)
+ * @param {string} embeddedName - name to embed (e.g. "photo.png" or "myfolder.zip")
+ * @param {boolean} isFolder
+ * @param {string} password
+ * @param {(frac:number)=>void} [onProgress]
+ * @returns {Promise<Uint8Array>} the full .vault file bytes
+ */
+async function encryptToVault(dataBytes, embeddedName, isFolder, password, onProgress) {
+  const salt = crypto.getRandomValues(new Uint8Array(SALT_LEN));
+  const baseNonce = crypto.getRandomValues(new Uint8Array(BASE_NONCE_LEN));
+  const rawKey = await deriveKey(password, salt);
+  const aesKey = await importAesKey(rawKey);
+
+  const nameBytes = new TextEncoder().encode(embeddedName);
+  const header = concatBytes(
+    new Uint8Array([isFolder ? 1 : 0]),
+    (() => { const b = new Uint8Array(2); new DataView(b.buffer).setUint16(0, nameBytes.length, false); return b; })(),
+    nameBytes
+  );
+
+  const hasher = { data: [] }; // accumulate for sha256 at the end (simplest correct approach)
+  const parts = [MAGIC, u32be(SCRYPT_N), u32be(SCRYPT_R), u32be(SCRYPT_P), salt, baseNonce];
+
+  const fullPlain = concatBytes(header, dataBytes);
+  const fileHash = await sha256(fullPlain);
+
+  let chunkIndex = 0;
+  let offset = 0;
+  while (offset < fullPlain.length || chunkIndex === 0) {
+    const end = Math.min(offset + CHUNK_SIZE, fullPlain.length);
+    const chunkPlain = fullPlain.subarray(offset, end);
+    const nonce = concatBytes(baseNonce, u32be(chunkIndex));
+    const aad = u32be(chunkIndex); // reused as 4-byte AAD, matches Python struct.pack('>I', idx)
+    const ct = new Uint8Array(await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv: nonce, additionalData: aad }, aesKey, chunkPlain
+    ));
+    parts.push(u32be(ct.length), ct);
+    chunkIndex++;
+    offset = end;
+    if (onProgress) onProgress(Math.min(offset / Math.max(fullPlain.length, 1), 1) * 0.95);
+    if (offset >= fullPlain.length) break;
+  }
+
+  // trailer chunk: AAD = TRAILER_AAD, plaintext = whole-content SHA-256
+  const trailerNonce = concatBytes(baseNonce, u32be(chunkIndex));
+  const trailerCt = new Uint8Array(await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv: trailerNonce, additionalData: TRAILER_AAD }, aesKey, fileHash
+  ));
+  parts.push(u32be(trailerCt.length), trailerCt);
+
+  if (onProgress) onProgress(1);
+  return concatBytes(...parts);
+}
+
+/**
+ * Decrypt a .vault file's bytes.
+ * @returns {Promise<{name:string, isFolder:boolean, data:Uint8Array, verified:boolean}>}
+ */
+async function decryptVault(vaultBytes, password, onProgress) {
+  let offset = 0;
+  const magic = vaultBytes.subarray(0, 8);
+  if (hex(magic) !== hex(MAGIC)) {
+    throw new CorruptedFileError('Not a valid VaultCrypt (v3) file.');
+  }
+  offset += 8;
+  const n = readU32be(vaultBytes, offset); offset += 4;
+  const r = readU32be(vaultBytes, offset); offset += 4;
+  const p = readU32be(vaultBytes, offset); offset += 4;
+  const salt = vaultBytes.subarray(offset, offset + SALT_LEN); offset += SALT_LEN;
+  const baseNonce = vaultBytes.subarray(offset, offset + BASE_NONCE_LEN); offset += BASE_NONCE_LEN;
+
+  const rawKey = await deriveKey(password, salt, n, r, p);
+  const aesKey = await importAesKey(rawKey);
+
+  // Parse all chunk records first (length-prefixed), so we know which is last.
+  const records = [];
+  let o = offset;
+  while (o < vaultBytes.length) {
+    if (o + 4 > vaultBytes.length) throw new CorruptedFileError('File is truncated (incomplete chunk length).');
+    const ctLen = readU32be(vaultBytes, o); o += 4;
+    if (o + ctLen > vaultBytes.length) throw new CorruptedFileError('File is truncated (incomplete chunk data).');
+    records.push(vaultBytes.subarray(o, o + ctLen));
+    o += ctLen;
+  }
+  if (records.length === 0) throw new CorruptedFileError('File has no data (missing trailer).');
+
+  const totalRecords = records.length;
+  const dataParts = [];
+  let trailerDigest = null;
+
+  for (let i = 0; i < totalRecords; i++) {
+    const isLast = i === totalRecords - 1;
+    const nonce = concatBytes(baseNonce, u32be(i));
+    const aad = isLast ? TRAILER_AAD : u32be(i);
+    let pt;
+    try {
+      pt = new Uint8Array(await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: nonce, additionalData: aad }, aesKey, records[i]
+      ));
+    } catch (e) {
+      if (i === 0) throw new WrongPasswordError('Incorrect password, or this file is corrupted/tampered with.');
+      throw new CorruptedFileError(`Integrity check failed at chunk ${i} — the file is corrupted, truncated, or was tampered with.`);
+    }
+    if (isLast) trailerDigest = pt;
+    else dataParts.push(pt);
+    if (onProgress) onProgress((i + 1) / totalRecords);
+  }
+
+  const fullPlain = concatBytes(...dataParts);
+  if (fullPlain.length < 3) throw new CorruptedFileError('File is corrupted (missing embedded header).');
+  const isFolder = fullPlain[0] === 1;
+  const nameLen = new DataView(fullPlain.buffer, fullPlain.byteOffset + 1, 2).getUint16(0, false);
+  if (fullPlain.length < 3 + nameLen) throw new CorruptedFileError('File is corrupted (missing embedded header).');
+  const name = new TextDecoder().decode(fullPlain.subarray(3, 3 + nameLen));
+  const data = fullPlain.subarray(3 + nameLen);
+
+  const computedHash = await sha256(fullPlain);
+  const verified = trailerDigest !== null && hex(computedHash) === hex(trailerDigest);
+  if (!verified) {
+    throw new CorruptedFileError('Integrity check failed — decrypted content does not match the original checksum.');
+  }
+
+  return { name, isFolder, data, verified };
+}
+
+function hex(bytes) {
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+</script>
+<script>
+/* ==================== App logic ==================== */
+'use strict';
+
+const ENC_EXT = '.vault';
+const PREVIEW_LIMIT = 100 * 1024 * 1024; // 100 MiB, matches desktop app
+const TEXT_EXTENSIONS = new Set(['.txt','.md','.markdown','.py','.js','.ts','.jsx','.tsx','.json','.csv','.tsv','.log','.xml','.html','.htm','.css','.scss','.yaml','.yml','.ini','.cfg','.conf','.c','.h','.cpp','.hpp','.java','.go','.rs','.sh','.bat','.ps1','.sql','.toml','.rst','.env']);
+const IMAGE_EXTENSIONS = new Set(['.png','.jpg','.jpeg','.gif','.bmp','.webp','.ico']);
+
+let mode = 'encrypt';
+let queue = []; // {id, kind:'file'|'folder', name, size, file (for file), entries (for folder: [{relPath,file}])}
+let nextId = 1;
+let selectedId = null;
+let running = false;
+
+const $ = (id) => document.getElementById(id);
+
+/* ---------- small utilities ---------- */
+function humanSize(n) {
+  n = Number(n);
+  const units = ['B','KB','MB','GB','TB'];
+  for (const u of units) {
+    if (n < 1024) return u === 'B' ? `${n.toFixed(0)} ${u}` : `${n.toFixed(1)} ${u}`;
+    n /= 1024;
+  }
+  return `${n.toFixed(1)} PB`;
+}
+function log(text) {
+  const el = $('log');
+  el.textContent += (el.textContent ? '\n' : '') + text;
+  el.scrollTop = el.scrollHeight;
+}
+function toast(message, isError) {
+  const area = $('toastArea');
+  const t = document.createElement('div');
+  t.className = 'toast' + (isError ? ' error' : '');
+  t.textContent = message;
+  area.appendChild(t);
+  setTimeout(() => t.remove(), 6000);
+  log((isError ? '⚠ ' : '') + message);
+}
+function setPhase(text) { $('phaseLabel').textContent = text; }
+function setOverall(frac) {
+  const pct = Math.round(frac * 100);
+  $('overallProgress').style.width = pct + '%';
+  $('overallPct').textContent = pct + '%';
+}
+function setItemProgress(frac) { $('itemProgress').style.width = Math.round(frac * 100) + '%'; }
+
+function base64UrlEncode(bytes) {
+  let bin = '';
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function downloadBytes(bytes, filename) {
+  const blob = new Blob([bytes], { type: 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+
+/* ---------- password strength (mirrors the desktop app's scoring) ---------- */
+function passwordStrength(pw) {
+  if (!pw) return { score: 0, label: 'Empty' };
+  let score = Math.min(pw.length * 4, 40);
+  let classes = 0;
+  if (/[a-z]/.test(pw)) classes++;
+  if (/[A-Z]/.test(pw)) classes++;
+  if (/[0-9]/.test(pw)) classes++;
+  if (/[^A-Za-z0-9]/.test(pw)) classes++;
+  score += classes * 12;
+  if (pw.length < 8) score = Math.min(score, 30);
+  score = Math.max(0, Math.min(score, 100));
+  let label = score < 30 ? 'Weak' : score < 55 ? 'Fair' : score < 80 ? 'Good' : 'Strong';
+  return { score, label };
+}
+function generateStrongPassword(length = 20) {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[]{}';
+  while (true) {
+    const bytes = crypto.getRandomValues(new Uint8Array(length));
+    let pw = '';
+    for (let i = 0; i < length; i++) pw += alphabet[bytes[i] % alphabet.length];
+    if (/[a-z]/.test(pw) && /[A-Z]/.test(pw) && /[0-9]/.test(pw) && /[!@#$%^&*()\-_=+\[\]{}]/.test(pw)) return pw;
+  }
+}
+
+/* ---------- key files (same JSON format as the desktop app) ---------- */
+function generateKeyfileSecret() {
+  return base64UrlEncode(crypto.getRandomValues(new Uint8Array(32)));
+}
+function keyfileJsonBytes(secret) {
+  return new TextEncoder().encode(JSON.stringify({ format: 'vaultcrypt-keyfile-v1', key: secret }, null, 2));
+}
+function readKeyfileText(text) {
+  text = text.trim();
+  if (!text) throw new Error('Key file is empty.');
+  try {
+    const obj = JSON.parse(text);
+    if (obj && typeof obj.key === 'string' && obj.key) return obj.key;
+  } catch (e) { /* fall through to plain-text */ }
+  return text;
+}
+
+/* ---------- content classification for preview ---------- */
+function sniffImage(bytes) {
+  if (bytes.length >= 8 && bytes[0]===0x89 && bytes[1]===0x50 && bytes[2]===0x4e && bytes[3]===0x47) return true; // PNG
+  if (bytes.length >= 3 && bytes[0]===0xff && bytes[1]===0xd8 && bytes[2]===0xff) return true; // JPEG
+  if (bytes.length >= 6) {
+    const s = String.fromCharCode(...bytes.subarray(0,6));
+    if (s === 'GIF87a' || s === 'GIF89a') return true;
+  }
+  if (bytes.length >= 2 && bytes[0]===0x42 && bytes[1]===0x4d) return true; // BMP
+  if (bytes.length >= 12 && String.fromCharCode(...bytes.subarray(0,4))==='RIFF' && String.fromCharCode(...bytes.subarray(8,12))==='WEBP') return true;
+  return false;
+}
+function extOf(name) {
+  const i = name.lastIndexOf('.');
+  return i === -1 ? '' : name.slice(i).toLowerCase();
+}
+function classifyContent(name, bytes) {
+  if (sniffImage(bytes)) return 'image';
+  const ext = extOf(name);
+  if (bytes.length >= 4 && String.fromCharCode(...bytes.subarray(0,4)) === '%PDF' || ext === '.pdf') return 'pdf';
+  if (IMAGE_EXTENSIONS.has(ext)) return 'image';
+  if (TEXT_EXTENSIONS.has(ext)) return 'text';
+  if (bytes.length === 0) return 'text';
+  const sample = bytes.subarray(0, 8192);
+  let decoded;
+  try { decoded = new TextDecoder('utf-8', { fatal: true }).decode(sample); }
+  catch (e) { return 'binary'; }
+  if (!decoded) return 'text';
+  let printable = 0;
+  for (const ch of decoded) {
+    const c = ch.codePointAt(0);
+    if (c === 9 || c === 10 || c === 13 || (c >= 32 && c < 127) || c > 159) printable++;
+  }
+  return (printable / decoded.length) > 0.95 ? 'text' : 'binary';
+}
+function hexDump(bytes, width = 16) {
+  const lines = [];
+  for (let i = 0; i < bytes.length; i += width) {
+    const chunk = bytes.subarray(i, i + width);
+    const hexPart = Array.from(chunk).map(b => b.toString(16).padStart(2,'0')).join(' ').padEnd(width*3, ' ');
+    const asciiPart = Array.from(chunk).map(b => (b >= 32 && b < 127) ? String.fromCharCode(b) : '.').join('');
+    lines.push(`${i.toString(16).padStart(8,'0')}  ${hexPart}  ${asciiPart}`);
+  }
+  return lines.join('\n');
+}
+
+/* ---------- queue management ---------- */
+function addFileItem(file) {
+  if (mode === 'decrypt' && !file.name.toLowerCase().endsWith(ENC_EXT)) {
+    log(`Skipped "${file.name}" (not a ${ENC_EXT} file)`); return;
+  }
+  if (mode === 'encrypt' && file.name.toLowerCase().endsWith(ENC_EXT)) {
+    log(`Skipped "${file.name}" (already encrypted)`); return;
+  }
+  const item = { id: nextId++, kind: 'file', name: file.name, size: file.size, file };
+  queue.push(item);
+  selectedId = item.id;
+  renderQueue();
+}
+function addFolderItem(name, entries) {
+  if (mode === 'decrypt') { log('Folders can only be added in Encrypt mode.'); return; }
+  const size = entries.reduce((s, e) => s + e.file.size, 0);
+  const item = { id: nextId++, kind: 'folder', name, size, entries };
+  queue.push(item);
+  selectedId = item.id;
+  renderQueue();
+}
+function renderQueue() {
+  const dz = $('dropzone');
+  dz.querySelectorAll('.queue-item').forEach(n => n.remove());
+  const hint = $('emptyHint');
+  hint.style.display = queue.length ? 'none' : 'flex';
+  for (const item of queue) {
+    const div = document.createElement('div');
+    div.className = 'queue-item' + (item.id === selectedId ? ' selected' : '');
+    div.dataset.id = item.id;
+    const icon = item.kind === 'folder' ? '📁' : (item.name.endsWith(ENC_EXT) ? '🔒' : '📄');
+    div.innerHTML = `<span>${icon}</span><span class="qname"></span><span class="qsize">${humanSize(item.size)}</span>`;
+    div.querySelector('.qname').textContent = item.name;
+    div.addEventListener('click', () => { selectedId = item.id; renderQueue(); });
+    div.addEventListener('dblclick', () => { selectedId = item.id; renderQueue(); previewSelected(); });
+    dz.appendChild(div);
+  }
+  $('queueCount').textContent = `${queue.length} item${queue.length === 1 ? '' : 's'}`;
+}
+function clearQueue() { queue = []; selectedId = null; renderQueue(); }
+function removeSelected() {
+  queue = queue.filter(i => i.id !== selectedId);
+  selectedId = null;
+  renderQueue();
+}
+
+/* ---------- folder traversal (drag & drop of a directory) ---------- */
+function readEntriesPromise(reader) {
+  return new Promise((resolve, reject) => reader.readEntries(resolve, reject));
+}
+async function traverseFileTree(entry, path, fileList) {
+  const fullPath = path + entry.name;
+  if (entry.isFile) {
+    const file = await new Promise((res, rej) => entry.file(res, rej));
+    fileList.push({ relPath: fullPath, file });
+  } else if (entry.isDirectory) {
+    const reader = entry.createReader();
+    let entries;
+    do {
+      entries = await readEntriesPromise(reader);
+      for (const e of entries) await traverseFileTree(e, fullPath + '/', fileList);
+    } while (entries.length > 0);
+  }
+}
+async function handleDroppedItems(dataTransferItems) {
+  for (let i = 0; i < dataTransferItems.length; i++) {
+    const item = dataTransferItems[i];
+    if (item.kind !== 'file') continue;
+    const entry = item.webkitGetAsEntry ? item.webkitGetAsEntry() : null;
+    if (entry && entry.isDirectory) {
+      const fileList = [];
+      await traverseFileTree(entry, '', fileList);
+      addFolderItem(entry.name, fileList);
+    } else {
+      const file = item.getAsFile();
+      if (file) addFileItem(file);
+    }
+  }
+}
+
+/* ---------- mode switching ---------- */
+function setMode(newMode) {
+  mode = newMode;
+  const isEncrypt = mode === 'encrypt';
+  $('modeEncryptBtn').classList.toggle('active', isEncrypt);
+  $('modeDecryptBtn').classList.toggle('active', !isEncrypt);
+  $('confirmRow').style.display = isEncrypt ? 'block' : 'none';
+  $('strengthBarOuter').style.display = isEncrypt ? 'block' : 'none';
+  $('strengthLabel').style.display = isEncrypt ? 'block' : 'none';
+  $('genPasswordBtn').style.display = isEncrypt ? 'inline-block' : 'none';
+  $('genKeyfileBtn').style.display = isEncrypt ? 'inline-block' : 'none';
+  $('addFolderBtn').style.display = isEncrypt ? 'inline-block' : 'none';
+  $('keyfileHint').textContent = isEncrypt
+    ? 'Use a key file instead of typing a password — great for backups.'
+    : 'Import the key file this was encrypted with instead of typing the password.';
+  $('startBtn').textContent = isEncrypt ? 'Start Encryption' : 'Start Decryption';
+  clearQueue();
+}
+
+/* ---------- maybe auto-switch mode when dropped/added content clearly belongs to the other mode ---------- */
+function maybeOfferModeSwitch(vaultCount, otherCount, sampleName) {
+  if (queue.length > 0) return;
+  if (mode === 'encrypt' && vaultCount > 0 && otherCount === 0) {
+    if (confirm(`"${sampleName}" looks like an encrypted ${ENC_EXT} file.\nSwitch to Decrypt mode?`)) {
+      setMode('decrypt');
+    }
+  } else if (mode === 'decrypt' && otherCount > 0 && vaultCount === 0) {
+    if (confirm(`These items aren't encrypted ${ENC_EXT} files.\nSwitch to Encrypt mode?`)) {
+      setMode('encrypt');
+    }
+  }
+}
+
+/* ---------- key file drop detection ---------- */
+async function tryHandleKeyfileDrop(files) {
+  if (files.length === 1 && files[0].name.toLowerCase().endsWith('.key')) {
+    await applyKeyfile(files[0]);
+    return true;
+  }
+  return false;
+}
+async function applyKeyfile(file) {
+  try {
+    const text = await file.text();
+    const secret = readKeyfileText(text);
+    $('pwField').value = secret;
+    if (mode === 'encrypt') $('pwConfirm').value = secret;
+    onPasswordChanged();
+    log(`Imported key from "${file.name}".`);
+  } catch (e) {
+    toast(`Could not read key file: ${e.message}`, true);
+  }
+}
+
+/* ---------- password field wiring ---------- */
+function onPasswordChanged() {
+  const pw = $('pwField').value;
+  const { score, label } = passwordStrength(pw);
+  const bar = $('strengthBar');
+  bar.style.width = score + '%';
+  const colors = { Empty: '#3a3f52', Weak: '#f47174', Fair: '#f5a623', Good: '#5865f2', Strong: '#3ecf8e' };
+  bar.style.background = colors[label];
+  $('strengthLabel').textContent = pw ? label : '';
+}
+
+/* ---------- encryption / decryption pipeline ---------- */
+async function zipFolder(entries, onProgress) {
+  const zip = new JSZip();
+  for (const { relPath, file } of entries) {
+    zip.file(relPath, await file.arrayBuffer());
+  }
+  return await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' }, (meta) => {
+    if (onProgress) onProgress(meta.percent / 100);
+  });
+}
+
+async function processQueueItem(item, isEncrypt, password) {
+  if (isEncrypt) {
+    let dataBytes, embeddedName, isFolder;
+    if (item.kind === 'folder') {
+      setPhase(`Compressing folder "${item.name}"…`);
+      dataBytes = await zipFolder(item.entries, (f) => setItemProgress(f * 0.3));
+      embeddedName = item.name + '.zip';
+      isFolder = true;
+    } else {
+      dataBytes = new Uint8Array(await item.file.arrayBuffer());
+      embeddedName = item.name;
+      isFolder = false;
+    }
+    setPhase(`Encrypting "${item.name}"…`);
+    const vaultBytes = await encryptToVault(dataBytes, embeddedName, isFolder, password, (f) => {
+      setItemProgress(isFolder ? 0.3 + f * 0.7 : f);
+    });
+    const outName = item.name + ENC_EXT;
+    if ($('autoDownloadChk').checked) downloadBytes(vaultBytes, outName);
+    log(`✔ Encrypted "${item.name}" → ${outName}`);
+    return { outName, bytes: vaultBytes };
+  } else {
+    setPhase(`Decrypting "${item.name}"…`);
+    const vaultBytes = new Uint8Array(await item.file.arrayBuffer());
+    const result = await decryptVault(vaultBytes, password, (f) => setItemProgress(f));
+    if (result.isFolder) {
+      const outName = result.name; // already "<folder>.zip"
+      if ($('autoDownloadChk').checked) downloadBytes(result.data, outName);
+      log(`✔ Decrypted "${item.name}" → ${outName} (zip — unzip to restore the folder)`);
+      return { outName, bytes: result.data };
+    } else {
+      if ($('autoDownloadChk').checked) downloadBytes(result.data, result.name);
+      log(`✔ Decrypted "${item.name}" → ${result.name}`);
+      return { outName: result.name, bytes: result.data };
+    }
+  }
+}
+
+async function startJob() {
+  if (running) return;
+  if (queue.length === 0) { toast('Add files or a folder first.'); return; }
+  const password = $('pwField').value;
+  if (!password) { toast('Enter a password (or import a key file) first.'); return; }
+  const isEncrypt = mode === 'encrypt';
+  if (isEncrypt) {
+    if (password !== $('pwConfirm').value) { toast('Passwords do not match.', true); return; }
+    const { score } = passwordStrength(password);
+    if (score < 30 && !confirm('This password is weak. Continue anyway?')) return;
+  }
+
+  running = true;
+  $('startBtn').disabled = true;
+  $('log').textContent = '';
+  setOverall(0);
+
+  let success = 0, fail = 0;
+  for (let i = 0; i < queue.length; i++) {
+    const item = queue[i];
+    try {
+      await processQueueItem(item, isEncrypt, password);
+      success++;
+    } catch (e) {
+      fail++;
+      log(`✘ ${item.name}: ${e.message}`);
+    }
+    setOverall((i + 1) / queue.length);
+  }
+
+  setPhase('Done');
+  setItemProgress(1);
+  const msg = `Finished: ${success} succeeded${fail ? `, ${fail} failed` : ''}`;
+  log(msg);
+  toast(msg, fail > 0);
+
+  $('pwField').value = '';
+  $('pwConfirm').value = '';
+  onPasswordChanged();
+  running = false;
+  $('startBtn').disabled = false;
+}
+
+/* ---------- preview / verify ---------- */
+function selectedItem() {
+  const found = queue.find(i => i.id === selectedId);
+  if (found) return found;
+  return queue.length === 1 ? queue[0] : null; // safety net: only one possible target anyway
+}
+
+async function previewSelected() {
+  const item = selectedItem();
+  if (!item) { toast('Select an item in the queue first.'); return; }
+  if (!(item.kind === 'file' && item.name.toLowerCase().endsWith(ENC_EXT))) {
+    toast(`"${item.name}" isn't a ${ENC_EXT} file, so it can't be previewed.`); return;
+  }
+  const password = await promptPassword(item.name);
+  if (!password) return;
+  try {
+    setPhase(`Decrypting "${item.name}" for preview…`);
+    const vaultBytes = new Uint8Array(await item.file.arrayBuffer());
+    if (vaultBytes.length > PREVIEW_LIMIT) {
+      toast(`"${item.name}" is too large to preview in-browser. Use Decrypt to export it instead.`, true);
+      setPhase('Ready'); return;
+    }
+    const result = await decryptVault(vaultBytes, password, (f) => setItemProgress(f));
+    setPhase('Ready'); setItemProgress(0);
+    showPreview(result);
+  } catch (e) {
+    setPhase('Ready'); setItemProgress(0);
+    toast(e.message, true);
+  }
+}
+
+async function verifySelected() {
+  const item = selectedItem();
+  if (!item) { toast('Select an item in the queue first.'); return; }
+  if (!(item.kind === 'file' && item.name.toLowerCase().endsWith(ENC_EXT))) {
+    toast(`"${item.name}" isn't a ${ENC_EXT} file.`); return;
+  }
+  const password = await promptPassword(item.name);
+  if (!password) return;
+  try {
+    setPhase(`Verifying "${item.name}"…`);
+    const vaultBytes = new Uint8Array(await item.file.arrayBuffer());
+    const result = await decryptVault(vaultBytes, password, (f) => setItemProgress(f));
+    setPhase('Ready'); setItemProgress(0);
+    const kind = result.isFolder ? 'folder' : 'file';
+    const displayName = result.isFolder ? result.name.replace(/\.zip$/i, '') : result.name;
+    alert(`Original name: ${displayName}\nType: ${kind}\nDecrypted size: ${humanSize(result.data.length)}\n\n✓ Integrity verified — content is intact and untampered.`);
+  } catch (e) {
+    setPhase('Ready'); setItemProgress(0);
+    alert(`Verification failed:\n${e.message}`);
+  }
+}
+
+function promptPassword(itemName) {
+  const existing = $('pwField').value;
+  if (existing) return Promise.resolve(existing);
+  const pw = prompt(`Enter password for "${itemName}":`);
+  return Promise.resolve(pw || null);
+}
+
+function showPreview(result) {
+  const displayName = result.isFolder ? result.name.replace(/\.zip$/i, '') : result.name;
+  $('previewTitle').textContent = (result.isFolder ? '📁 ' : '📄 ') + displayName;
+  $('previewBadge').innerHTML = result.verified
+    ? '<span class="badge-ok">✓ Integrity verified</span>'
+    : '<span class="badge-bad">⚠ Integrity check FAILED</span>';
+  const body = $('previewBody');
+  body.innerHTML = '';
+  const saveBtn = $('previewSaveBtn');
+
+  if (result.isFolder) {
+    JSZip.loadAsync(result.data).then((zip) => {
+      const names = Object.keys(zip.files).filter(n => !zip.files[n].dir).sort();
+      const list = document.createElement('div');
+      list.className = 'zip-entry-list';
+      const pre = document.createElement('pre');
+      pre.textContent = 'Double-click a file above to preview it here';
+      for (const n of names) {
+        const row = document.createElement('div');
+        row.textContent = n;
+        row.addEventListener('click', async () => {
+          const entryBytes = new Uint8Array(await zip.files[n].async('uint8array'));
+          renderInline(pre, n, entryBytes);
+        });
+        list.appendChild(row);
+      }
+      body.appendChild(list);
+      body.appendChild(pre);
+      saveBtn.onclick = () => {
+        const blob = result.data;
+        downloadBytes(blob, result.name);
+      };
+      saveBtn.textContent = '💾 Export Folder (.zip)';
+    });
+  } else {
+    renderInline(body, result.name, result.data);
+    saveBtn.textContent = '💾 Save As…';
+    saveBtn.onclick = () => downloadBytes(result.data, result.name);
+  }
+  $('previewBackdrop').classList.add('open');
+}
+
+function renderInline(container, name, bytes) {
+  container.innerHTML = '';
+  const kind = classifyContent(name, bytes);
+  if (kind === 'image') {
+    const blob = new Blob([bytes]);
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(blob);
+    container.appendChild(img);
+    const info = document.createElement('div');
+    info.className = 'hint';
+    info.style.textAlign = 'center';
+    info.textContent = humanSize(bytes.length);
+    container.appendChild(info);
+  } else if (kind === 'pdf') {
+    const p = document.createElement('div');
+    p.className = 'hint';
+    p.style.textAlign = 'center';
+    p.textContent = `📕 PDF document — ${humanSize(bytes.length)}. Inline preview isn't supported — use Save As to export it.`;
+    container.appendChild(p);
+  } else if (kind === 'text') {
+    const pre = document.createElement('pre');
+    pre.textContent = new TextDecoder('utf-8', { fatal: false }).decode(bytes);
+    container.appendChild(pre);
+  } else {
+    const snippet = bytes.subarray(0, 4096);
+    const pre = document.createElement('pre');
+    pre.textContent = hexDump(snippet) + (bytes.length > snippet.length ? `\n… (${humanSize(bytes.length - snippet.length)} more, not shown)` : '');
+    container.appendChild(pre);
+  }
+}
+
+/* ---------- wire up UI ---------- */
+$('modeEncryptBtn').addEventListener('click', () => setMode('encrypt'));
+$('modeDecryptBtn').addEventListener('click', () => setMode('decrypt'));
+
+$('addFilesBtn').addEventListener('click', () => $('fileInput').click());
+$('addFolderBtn').addEventListener('click', () => $('folderInput').click());
+$('fileInput').addEventListener('change', async (e) => {
+  const files = Array.from(e.target.files);
+  if (await tryHandleKeyfileDrop(files)) { e.target.value = ''; return; }
+  const vaultCount = files.filter(f => f.name.toLowerCase().endsWith(ENC_EXT)).length;
+  maybeOfferModeSwitch(vaultCount, files.length - vaultCount, files[0] && files[0].name);
+  files.forEach(addFileItem);
+  e.target.value = '';
+});
+$('folderInput').addEventListener('change', (e) => {
+  const files = Array.from(e.target.files);
+  if (files.length === 0) return;
+  const top = files[0].webkitRelativePath.split('/')[0];
+  const entries = files.map(f => ({ relPath: f.webkitRelativePath, file: f }));
+  addFolderItem(top, entries);
+  e.target.value = '';
+});
+$('removeSelectedBtn').addEventListener('click', removeSelected);
+$('clearAllBtn').addEventListener('click', clearQueue);
+$('previewBtn').addEventListener('click', previewSelected);
+$('verifyBtn').addEventListener('click', verifySelected);
+
+const dz = $('dropzone');
+dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('dragover'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+dz.addEventListener('drop', async (e) => {
+  e.preventDefault();
+  dz.classList.remove('dragover');
+  const items = e.dataTransfer.items;
+  if (items && items.length && items[0].webkitGetAsEntry) {
+    const plainFiles = Array.from(e.dataTransfer.files || []);
+    if (await tryHandleKeyfileDrop(plainFiles)) return;
+    const vaultCount = plainFiles.filter(f => f.name.toLowerCase().endsWith(ENC_EXT)).length;
+    const dirCount = Array.from(items).filter(it => { const en = it.webkitGetAsEntry && it.webkitGetAsEntry(); return en && en.isDirectory; }).length;
+    maybeOfferModeSwitch(vaultCount, (plainFiles.length - vaultCount) + dirCount, plainFiles[0] && plainFiles[0].name);
+    await handleDroppedItems(items);
+  } else {
+    const files = Array.from(e.dataTransfer.files || []);
+    if (await tryHandleKeyfileDrop(files)) return;
+    files.forEach(addFileItem);
+  }
+});
+
+$('pwField').addEventListener('input', onPasswordChanged);
+$('pwToggle').addEventListener('click', () => {
+  const f = $('pwField');
+  f.type = f.type === 'password' ? 'text' : 'password';
+  $('pwToggle').textContent = f.type === 'password' ? '👁' : '🙈';
+});
+$('pwConfirmToggle').addEventListener('click', () => {
+  const f = $('pwConfirm');
+  f.type = f.type === 'password' ? 'text' : 'password';
+  $('pwConfirmToggle').textContent = f.type === 'password' ? '👁' : '🙈';
+});
+$('genPasswordBtn').addEventListener('click', () => {
+  const pw = generateStrongPassword();
+  $('pwField').value = pw; $('pwConfirm').value = pw;
+  onPasswordChanged();
+  navigator.clipboard && navigator.clipboard.writeText(pw).catch(() => {});
+  log('Generated a strong password (copied to clipboard, if permitted).');
+  setTimeout(async () => {
+    try { if ((await navigator.clipboard.readText()) === pw) await navigator.clipboard.writeText(''); } catch (e) {}
+  }, 30000);
+});
+$('genKeyfileBtn').addEventListener('click', () => {
+  const secret = generateKeyfileSecret();
+  const bytes = keyfileJsonBytes(secret);
+  downloadBytes(bytes, 'vaultcrypt.key');
+  $('pwField').value = secret; $('pwConfirm').value = secret;
+  onPasswordChanged();
+  log('Generated key file "vaultcrypt.key" and filled in the password field.');
+  alert('Key file downloaded.\n\nThis key file is the only way to decrypt anything encrypted with it — there\'s no password to fall back on. Store it somewhere safe and separate from your encrypted files. If it\'s lost, the data cannot be recovered.');
+});
+$('importKeyfileBtn').addEventListener('click', () => $('keyfileInput').click());
+$('keyfileInput').addEventListener('change', async (e) => {
+  if (e.target.files[0]) await applyKeyfile(e.target.files[0]);
+  e.target.value = '';
+});
+$('startBtn').addEventListener('click', startJob);
+
+$('previewCloseBtn').addEventListener('click', () => $('previewBackdrop').classList.remove('open'));
+$('previewBackdrop').addEventListener('click', (e) => { if (e.target === e.currentTarget) $('previewBackdrop').classList.remove('open'); });
+
+setMode('encrypt');
+</script>
+</body>
+</html>
